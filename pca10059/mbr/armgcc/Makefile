@@ -2,7 +2,7 @@ PROJECT_NAME     := blinky_pca10059_mbr
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 DFU_PACKAGE      := $(OUTPUT_DIRECTORY)/nrf52840_xxaa.dfu
-DFU_PORT         ?= /dev/ttyACM0
+DFU_PORT         ?= COM3
 
 
 SDK_ROOT := C:/esl-nsdk
@@ -13,6 +13,7 @@ $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
 
 # Source files common to all targets
 SRC_FILES += \
+  $(PROJ_DIR)/main.cpp \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
@@ -85,6 +86,22 @@ CFLAGS += -fno-builtin -fshort-enums
 
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)
+CXXFLAGS += -DBOARD_PCA10059
+CXXFLAGS += -DBSP_DEFINES_ONLY
+CXXFLAGS += -DCONFIG_GPIO_AS_PINRESET
+CXXFLAGS += -DFLOAT_ABI_HARD
+CXXFLAGS += -DMBR_PRESENT
+CXXFLAGS += -DNRF52840_XXAA
+CXXFLAGS += -mcpu=cortex-m4
+CXXFLAGS += -mthumb -mabi=aapcs
+CXXFLAGS += -Wall -Werror
+CXXFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+# keep every function in a separate section, this allows linker to discard unused ones
+CXXFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
+CXXFLAGS += -fno-builtin -fshort-enums
+CXXFLAGS += -fno-rtti -fno-exceptions -fno-threadsafe-statics -nostdlib -fno-unwind-tables
+CXXFLAGS += -std=c++17
+
 # Assembler flags common to all targets
 ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
@@ -109,6 +126,8 @@ LDFLAGS += --specs=nano.specs
 
 nrf52840_xxaa: CFLAGS += -D__HEAP_SIZE=8192
 nrf52840_xxaa: CFLAGS += -D__STACK_SIZE=8192
+nrf52840_xxaa: CXXFLAGS += -D__HEAP_SIZE=8192
+nrf52840_xxaa: CXXFLAGS += -D__STACK_SIZE=8192
 nrf52840_xxaa: ASMFLAGS += -D__HEAP_SIZE=8192
 nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=8192
 
