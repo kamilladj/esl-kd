@@ -2,7 +2,7 @@ PROJECT_NAME     := blinky_pca10059_mbr
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 DFU_PACKAGE      := $(OUTPUT_DIRECTORY)/nrf52840_xxaa.dfu
-DFU_PORT         ?= /dev/ttyACM0
+DFU_PORT         ?= COM3
 
 
 SDK_ROOT := C:/esl-nsdk
