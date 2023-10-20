@@ -53,6 +53,8 @@
 #include "nrf_delay.h"
 #include "boards.h"
 
+#define ID_NUMBER 1379
+
 /**
  * @brief Function for application main entry.
  */
@@ -64,10 +66,22 @@ int main(void)
     /* Toggle LEDs. */
     while (true)
     {
-        for (int i = 0; i < LEDS_NUMBER; i++)
+        int id = ID_NUMBER;
+        int count = 0;
+        int pos = 1000;
+        for (int i = 0; i < LEDS_NUMBER; i++, pos /= 10)
         {
-            bsp_board_led_invert(i);
-            nrf_delay_ms(500);
+            id -= count * pos * 10;
+            count = id / pos;
+            for (int j = 0; j < count; j++)
+            {
+                bsp_board_led_invert(i);
+                nrf_delay_ms(300);
+                bsp_board_led_invert(i);
+                nrf_delay_ms(300);
+            }
+
+            nrf_delay_ms(1000);
         }
     }
 }
