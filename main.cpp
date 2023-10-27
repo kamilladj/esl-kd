@@ -54,6 +54,7 @@
 #include "boards.h"
 
 #define ID_NUMBER 1379
+#define BUTTON NRF_GPIO_PIN_MAP(1,6)
 
 /**
  * @brief Function for application main entry.
@@ -63,25 +64,32 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
+    nrf_gpio_cfg_sense_input(BUTTON, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+
+    enum { button_pressed = 0, button_realised = 1 };
+
     /* Toggle LEDs. */
     while (true)
     {
-        int id = ID_NUMBER;
-        int count = 0;
-        int pos = 1000;
-        for (int i = 0; i < LEDS_NUMBER; i++, pos /= 10)
+        if (nrf_gpio_pin_read(BUTTON) == button_pressed)
         {
-            id -= count * pos * 10;
-            count = id / pos;
-            for (int j = 0; j < count; j++)
+            int id = ID_NUMBER;
+            int count = 0;
+            int pos = 1000;
+            for (int i = 0; i < LEDS_NUMBER; i++, pos /= 10)
             {
-                bsp_board_led_invert(i);
-                nrf_delay_ms(300);
-                bsp_board_led_invert(i);
-                nrf_delay_ms(300);
-            }
+                id -= count * pos * 10;
+                count = id / pos;
+                for (int j = 0; j < count; j++)
+                {
+                    bsp_board_led_invert(i);
+                    nrf_delay_ms(300);
+                    bsp_board_led_invert(i);
+                    nrf_delay_ms(300);
+                }
 
-            nrf_delay_ms(1000);
+                nrf_delay_ms(1000);
+            }
         }
     }
 }
