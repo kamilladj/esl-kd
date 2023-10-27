@@ -63,12 +63,21 @@ APP_TIMER_DEF(m_timer_123);
  * @brief Function for application main entry.
  */
 
+struct LED
+{
+    int led_id;
+    int count;
+};
+
+LED led_0 = { 0, 5 };
+void* p = &led_0;
+
 void single_shot_timer_handler(void* p_context)
 {
-    bsp_board_led_invert(0);
-    bsp_board_led_invert(1);
-    bsp_board_led_invert(2);
-    bsp_board_led_invert(3);
+    LED* led = (LED*)p_context;
+    bsp_board_led_invert(led->led_id);
+    if (led->count-- > 0)
+        app_timer_start(m_timer_123, APP_TIMER_TICKS(300), p_context); //start blinking
 }
 
 
@@ -88,14 +97,9 @@ int main(void)
 
         if (err_code == NRF_SUCCESS)
         {
-            err_code = app_timer_start(m_timer_123, APP_TIMER_TICKS(2000), (void*)123); //start blinking
+            err_code = app_timer_start(m_timer_123, APP_TIMER_TICKS(1000), p); //start blinking
         }
     }
-
-    if (err_code == NRF_SUCCESS)
-        bsp_board_led_invert(0);    // green
-    else
-        bsp_board_led_invert(1);    // red
 }
 
 /**
