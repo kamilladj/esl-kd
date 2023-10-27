@@ -37,61 +37,65 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-/** @file
- *
- * @defgroup blinky_example_main main.c
- * @{
- * @ingroup blinky_example
- * @brief Blinky Example Application main file.
- *
- * This file contains the source code for a sample application to blink LEDs.
- *
- */
+ /** @file
+  *
+  * @defgroup blinky_example_main main.c
+  * @{
+  * @ingroup blinky_example
+  * @brief Blinky Example Application main file.
+  *
+  * This file contains the source code for a sample application to blink LEDs.
+  *
+  */
 
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf_delay.h"
 #include "boards.h"
+#include "app_timer.h"
+#include "nrf_drv_clock.h"
+
 
 #define ID_NUMBER 1379
-#define BUTTON NRF_GPIO_PIN_MAP(1,6)
+APP_TIMER_DEF(m_timer_123);
 
 /**
  * @brief Function for application main entry.
  */
+
+void single_shot_timer_handler(void* p_context)
+{
+    bsp_board_led_invert(0);
+    bsp_board_led_invert(1);
+    bsp_board_led_invert(2);
+    bsp_board_led_invert(3);
+}
+
+
 int main(void)
 {
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    nrf_gpio_cfg_sense_input(BUTTON, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_drv_clock_init();
+    nrf_drv_clock_lfclk_request(NULL);
 
-    enum { button_pressed = 0, button_realised = 1 };
+    ret_code_t err_code = app_timer_init();
 
-    /* Toggle LEDs. */
-    while (true)
+    if (err_code == NRF_SUCCESS)
     {
-        if (nrf_gpio_pin_read(BUTTON) == button_pressed)
-        {
-            int id = ID_NUMBER;
-            int count = 0;
-            int pos = 1000;
-            for (int i = 0; i < LEDS_NUMBER; i++, pos /= 10)
-            {
-                id -= count * pos * 10;
-                count = id / pos;
-                for (int j = 0; j < count; j++)
-                {
-                    bsp_board_led_invert(i);
-                    nrf_delay_ms(300);
-                    bsp_board_led_invert(i);
-                    nrf_delay_ms(300);
-                }
+        err_code = app_timer_create(&m_timer_123, APP_TIMER_MODE_SINGLE_SHOT, single_shot_timer_handler);
 
-                nrf_delay_ms(1000);
-            }
+        if (err_code == NRF_SUCCESS)
+        {
+            err_code = app_timer_start(m_timer_123, APP_TIMER_TICKS(2000), (void*)123); //start blinking
         }
     }
+
+    if (err_code == NRF_SUCCESS)
+        bsp_board_led_invert(0);    // green
+    else
+        bsp_board_led_invert(1);    // red
 }
 
 /**
