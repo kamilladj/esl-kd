@@ -55,8 +55,12 @@
 #include "app_timer.h"
 #include "nrf_drv_clock.h"
 
+#define ID_NUMBER 5236
+#define digit1 ID_NUMBER%10
+#define digit2 ID_NUMBER/10%10
+#define digit3 ID_NUMBER/100%10
+#define digit4 ID_NUMBER/1000%10
 
-#define ID_NUMBER 1379
 APP_TIMER_DEF(m_timer_123);
 
 /**
@@ -67,17 +71,30 @@ struct LED
 {
     int led_id;
     int count;
-};
+} leds[4] = { { 0, digit4 },{ 1, digit3 },{ 2, digit2 },{ 3, digit1 } };
 
-LED led_0 = { 0, 5 };
-void* p = &led_0;
+void* ptr = leds;
 
 void single_shot_timer_handler(void* p_context)
 {
     LED* led = (LED*)p_context;
-    bsp_board_led_invert(led->led_id);
-    if (led->count-- > 0)
-        app_timer_start(m_timer_123, APP_TIMER_TICKS(300), p_context); //start blinking
+    static int cnt;
+
+    if (cnt++ < led->count * 2)
+    {
+        bsp_board_led_invert(led->led_id);
+        app_timer_start(m_timer_123, APP_TIMER_TICKS(300), p_context);
+    }
+    else
+    {
+        if (led->led_id != 3)
+            p_context = ++led;
+        else
+            p_context = ptr;
+
+        cnt = 0;
+        app_timer_start(m_timer_123, APP_TIMER_TICKS(1000), p_context);
+    }
 }
 
 
@@ -97,7 +114,7 @@ int main(void)
 
         if (err_code == NRF_SUCCESS)
         {
-            err_code = app_timer_start(m_timer_123, APP_TIMER_TICKS(1000), p); //start blinking
+            err_code = app_timer_start(m_timer_123, APP_TIMER_TICKS(1000), ptr); //start blinking
         }
     }
 }
