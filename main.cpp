@@ -74,6 +74,8 @@ struct LED
 } leds[4] = { { 0, digit4 },{ 1, digit3 },{ 2, digit2 },{ 3, digit1 } };
 
 void* ptr = leds;
+void operator delete(void*, unsigned int)
+{}
 
 void single_shot_timer_handler(void* p_context)
 {

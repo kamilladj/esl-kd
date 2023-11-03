@@ -72,7 +72,7 @@ public:
     /// @pre TFunc invocation must have the same signature as static_function
     /// @pre @code sizeof(TFunc) <= TSize @endcode
     template <typename TFunc>
-    explicit static_function(TFunc&& func);
+    static_function(TFunc&& func);
 
     /// @brief Copy constructor
     static_function(const static_function& other);
