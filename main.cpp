@@ -79,10 +79,6 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    nrf_drv_clock_init();
-    nrf_drv_clock_lfclk_request(NULL);
-    app_timer_init();
-
     nrf::singleshot_apptimer timer;
     timer.async_wait(300, my_handler);
 

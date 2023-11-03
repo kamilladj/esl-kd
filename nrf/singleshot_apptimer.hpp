@@ -3,6 +3,7 @@
 #include "app_timer.h"
 #include "static_function.hpp"
 #include "error_status.hpp"
+#include "singleton_apptimer.hpp"
 
 namespace nrf
 {
@@ -25,6 +26,8 @@ namespace nrf
 
 		void async_wait(uint32_t time_ms, utils::static_function<void(error::error_status)> handler)
 		{
+		    singleton_apptimer::instance();
+
 			error::error_status err = app_timer_create(&m_p_app_timer, APP_TIMER_MODE_SINGLE_SHOT, static_handler);
 
 			if (err)
@@ -40,7 +43,13 @@ namespace nrf
 					m_handler = handler;
 			}
 		}
-
+	   
+	    error::error_status cancel()
+		{
+			error::error_status err = app_timer_stop(m_p_app_timer);
+			return err;
+		}
+	    
 	private:
 
 		app_timer_t                                       m_app_timer;
