@@ -8,6 +8,11 @@ namespace nrf
 {
 	class singleshot_apptimer
 	{
+	private:
+
+	    singleshot_apptimer(const singleshot_apptimer&);
+	    singleshot_apptimer& operator=(const singleshot_apptimer&);
+
 	public:
 
 		singleshot_apptimer()
