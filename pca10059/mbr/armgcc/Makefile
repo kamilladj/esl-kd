@@ -29,6 +29,9 @@ SRC_FILES += \
 INC_FOLDERS += \
 	$(PROJ_DIR) \
 	../config \
+	$(PROJ_DIR)/nrf \
+	$(PROJ_DIR)/error \
+	$(PROJ_DIR)/utils \
 	$(SDK_ROOT)/integration/nrfx \
 	$(SDK_ROOT)/integration/nrfx/legacy \
 	$(SDK_ROOT)/modules/nrfx/drivers/include \

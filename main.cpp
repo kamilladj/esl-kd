@@ -48,55 +48,29 @@
   *
   */
 
-#include <stdbool.h>
-#include <stdint.h>
 #include "nrf_delay.h"
 #include "boards.h"
 #include "app_timer.h"
 #include "nrf_drv_clock.h"
 
-#define ID_NUMBER 5236
-#define digit1 ID_NUMBER%10
-#define digit2 ID_NUMBER/10%10
-#define digit3 ID_NUMBER/100%10
-#define digit4 ID_NUMBER/1000%10
-
-APP_TIMER_DEF(m_timer_123);
+#include "singleshot_apptimer.hpp"
+#include "error_status.hpp"
 
 /**
  * @brief Function for application main entry.
  */
 
-struct LED
-{
-    int led_id;
-    int count;
-} leds[4] = { { 0, digit4 },{ 1, digit3 },{ 2, digit2 },{ 3, digit1 } };
 
-void* ptr = leds;
 void operator delete(void*, unsigned int)
 {}
 
-void single_shot_timer_handler(void* p_context)
+
+void my_handler(error::error_status e)
 {
-    LED* led = (LED*)p_context;
-    static int cnt;
-
-    if (cnt++ < led->count * 2)
-    {
-        bsp_board_led_invert(led->led_id);
-        app_timer_start(m_timer_123, APP_TIMER_TICKS(300), p_context);
-    }
+    if (e)
+        bsp_board_led_invert(1);
     else
-    {
-        if (led->led_id != 3)
-            p_context = ++led;
-        else
-            p_context = ptr;
-
-        cnt = 0;
-        app_timer_start(m_timer_123, APP_TIMER_TICKS(1000), p_context);
-    }
+        bsp_board_led_invert(2);  // таймер сработал через заданное кол-во мс
 }
 
 
@@ -107,17 +81,16 @@ int main(void)
 
     nrf_drv_clock_init();
     nrf_drv_clock_lfclk_request(NULL);
+    app_timer_init();
 
-    ret_code_t err_code = app_timer_init();
+    nrf::singleshot_apptimer timer;
+    timer.async_wait(300, my_handler);
 
-    if (err_code == NRF_SUCCESS)
+    while (true)
     {
-        err_code = app_timer_create(&m_timer_123, APP_TIMER_MODE_SINGLE_SHOT, single_shot_timer_handler);
-
-        if (err_code == NRF_SUCCESS)
-        {
-            err_code = app_timer_start(m_timer_123, APP_TIMER_TICKS(1000), ptr); //start blinking
-        }
+        __SEV();
+        __WFE();
+        __WFE();
     }
 }
 
