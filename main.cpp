@@ -53,8 +53,8 @@
 #include "app_timer.h"
 #include "nrf_drv_clock.h"
 
-#include "singleshot_apptimer.hpp"
-#include "error_status.hpp"
+#include "nrf/singleshot_apptimer.hpp"
+#include "error/error_status.hpp"
 
 /**
  * @brief Function for application main entry.
@@ -68,9 +68,9 @@ void operator delete(void*, unsigned int)
 void my_handler(error::error_status e)
 {
     if (e)
-        bsp_board_led_invert(1);
+        bsp_board_led_invert(2);
     else
-        bsp_board_led_invert(2);  // таймер сработал через заданное кол-во мс
+        bsp_board_led_invert(3);  // таймер сработал через заданное кол-во мс
 }
 
 
