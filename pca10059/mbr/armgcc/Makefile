@@ -3,6 +3,7 @@ TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 DFU_PACKAGE      := $(OUTPUT_DIRECTORY)/nrf52840_xxaa.dfu
 DFU_PORT         ?= COM3
+RUN_TESTS        ?= FALSE
 
 
 SDK_ROOT ?= C:/esl-nsdk
@@ -12,8 +13,15 @@ $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := blinky_gcc_nrf52.ld
 
 # Source files common to all targets
+ifeq ($(RUN_TESTS), TRUE)
 SRC_FILES += \
-	$(PROJ_DIR)/main.cpp \
+    $(PROJ_DIR)/simpletest/simpletest.cpp \
+    $(wildcard $(PROJ_DIR)/tests/*.cpp)
+else
+SRC_FILES += \
+    $(PROJ_DIR)/main.cpp
+endif
+SRC_FILES += \
 	$(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
 	$(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.s \
@@ -29,9 +37,6 @@ SRC_FILES += \
 INC_FOLDERS += \
 	$(PROJ_DIR) \
 	../config \
-	$(PROJ_DIR)/nrf \
-	$(PROJ_DIR)/error \
-	$(PROJ_DIR)/utils \
 	$(SDK_ROOT)/integration/nrfx \
 	$(SDK_ROOT)/integration/nrfx/legacy \
 	$(SDK_ROOT)/modules/nrfx/drivers/include \
