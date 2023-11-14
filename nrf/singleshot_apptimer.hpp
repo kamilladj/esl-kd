@@ -26,7 +26,7 @@ namespace nrf
 
 		void async_wait(uint32_t time_ms, utils::static_function<void(error::error_status)> handler)
 		{
-		    singleton_apptimer::instance();
+		    singleton_apptimer::init();
 
 			error::error_status err = app_timer_create(&m_p_app_timer, APP_TIMER_MODE_SINGLE_SHOT, static_handler);
 

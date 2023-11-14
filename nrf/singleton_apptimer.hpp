@@ -8,7 +8,7 @@ namespace nrf
     class singleton_apptimer
     {
         public:
-            static singleton_apptimer& instance()
+            static singleton_apptimer& init()
             {
                 static singleton_apptimer s;
                 return s;
