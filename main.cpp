@@ -50,15 +50,16 @@
 
 #include "nrf_delay.h"
 #include "boards.h"
-#include "app_timer.h"
-#include "nrf_drv_clock.h"
 
-#include "nrf/singleshot_apptimer.hpp"
+#include "nrf/async_button.hpp"
 #include "error/error_status.hpp"
+#include "nrf_gpio.h"
 
 /**
  * @brief Function for application main entry.
  */
+
+#define PIN NRF_GPIO_PIN_MAP(1,6)
 
 
 void operator delete(void*, unsigned int)
@@ -68,9 +69,9 @@ void operator delete(void*, unsigned int)
 void my_handler(error::error_status e)
 {
     if (e)
-        bsp_board_led_invert(2);
+        bsp_board_led_invert(1);
     else
-        bsp_board_led_invert(3);  // таймер сработал через заданное кол-во мс
+        bsp_board_led_invert(3);  // сработал через заданное кол-во мс
 }
 
 
@@ -79,15 +80,8 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    nrf::singleshot_apptimer timer;
-    timer.async_wait(300, my_handler);
-
-    while (true)
-    {
-        __SEV();
-        __WFE();
-        __WFE();
-    }
+    nrf::async_button<PIN> a([](error::error_status e) {if (!e) bsp_board_led_invert(3); });
+    //nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(2); });
 }
 
 /**
