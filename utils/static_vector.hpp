@@ -1,10 +1,8 @@
 #pragma once
 
-#ifndef STATIC_VECTOR_HPP
-#define STATIC_VECTOR_HPP
-
 #include "aligned_storage.hpp"
 #include <utility>
+#include "nrf_assert.h"
 
 template<typename T, size_t size>
 class static_vector
@@ -71,8 +69,7 @@ public:
 	template<typename V>
 	void push_back(const V& v)
 	{
-		if (m_size == size)
-			throw std::overflow_error("Stack overflow!");
+        ASSERT(m_size != size);
 
 		new(m_storage[m_size]) T(v);
 		++m_size;
@@ -80,8 +77,7 @@ public:
 
 	void pop_back()
 	{
-		if (m_size == 0)
-			throw std::underflow_error("Stack underflow!");
+        ASSERT(m_size != 0);
 
 		((T*)m_storage[m_size - 1])->~T();
 		--m_size;
@@ -127,5 +123,3 @@ public:
 		}
 	}
 };
-
-#endif STATIC_VECTOR_HPP
