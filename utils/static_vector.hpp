@@ -3,6 +3,8 @@
 #include "aligned_storage.hpp"
 #include <utility>
 #include "nrf_assert.h"
+#include <stddef.h>
+#include <new>
 
 template<typename T, size_t size>
 class static_vector
@@ -47,8 +49,8 @@ public:
 	{
 		if (this != &other)
 		{
-			size_t min = std::min(m_size, other.m_size);
-			size_t max = std::max(m_size, other.m_size);
+            size_t min = m_size <= other.m_size ? m_size : other.m_size;
+            size_t max = m_size >= other.m_size ? m_size : other.m_size;
 			for (size_t i = 0; i < min; i++)
 			{
 				(*this)[i] = other[i];
@@ -101,8 +103,8 @@ public:
 
 	void swap(static_vector& other)
 	{
-		size_t min = std::min(m_size, other.m_size);
-		size_t max = std::max(m_size, other.m_size);
+		size_t min = m_size <= other.m_size ? m_size : other.m_size;
+		size_t max = m_size >= other.m_size ? m_size : other.m_size;
 		for (size_t i = 0; i < min; i++)
 		{
 			std::swap((*this)[i], other[i]);
