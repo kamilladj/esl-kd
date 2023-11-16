@@ -32,7 +32,8 @@ SRC_FILES += \
 	$(SDK_ROOT)/components/libraries/timer/app_timer2.c \
 	$(SDK_ROOT)/components/libraries/timer/drv_rtc.c \
 	$(SDK_ROOT)/components/libraries/sortlist/nrf_sortlist.c \
-	$(SDK_ROOT)/components/libraries/util/app_util_platform.c
+	$(SDK_ROOT)/components/libraries/util/app_util_platform.c \
+	$(SDK_ROOT)/components/libraries/atomic/nrf_atomic.c
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -57,7 +58,9 @@ INC_FOLDERS += \
 	$(SDK_ROOT)/components/libraries/timer \
 	$(SDK_ROOT)/components/libraries/sortlist \
 	$(SDK_ROOT)/components/libraries/atomic_fifo \
-	$(SDK_ROOT)/components/libraries/fifo
+	$(SDK_ROOT)/components/libraries/fifo \
+	$(SDK_ROOT)/components/libraries/mutex \
+	$(SDK_ROOT)/components/libraries/atomic
 
 # Libraries common to all targets
 LIB_FILES += \

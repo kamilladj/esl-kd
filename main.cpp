@@ -81,7 +81,7 @@ int main(void)
     bsp_board_init(BSP_INIT_LEDS);
 
     nrf::async_button<PIN> a([](error::error_status e) {if (!e) bsp_board_led_invert(3); });
-    //nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(2); });
+    nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
 }
 
 /**

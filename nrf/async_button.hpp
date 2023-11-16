@@ -4,6 +4,10 @@
 #include "utils/static_function.hpp"
 #include "error/error_status.hpp"
 #include "singleton_gpiote.hpp"
+#include "utils/static_vector.hpp"
+#include <stddef.h>
+
+#include "nrf_mtx.h"
 
 
 namespace nrf
@@ -15,8 +19,18 @@ namespace nrf
 
         async_button(utils::static_function<void(error::error_status)> handler)
         {
-            m_handler = handler;
+            nrf_mtx_init(&m_mtx);
+            if (nrf_mtx_trylock(&m_mtx))
+            {
+                m_handlers.push_back(handler);
+                nrf_mtx_unlock(&m_mtx);
+            }
             gpiote_init();
+        }
+
+        ~async_button()
+        {
+            nrf_mtx_destroy(&m_mtx);
         }
 
     private:
@@ -39,14 +53,26 @@ namespace nrf
 
         static void button_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
         {
-            m_handler(error::error_status());
+            static size_t i = m_handlers.get_size();
+            if (nrf_mtx_trylock(&m_mtx))
+            {
+                if (i-- > 0)
+                    (m_handlers[i])(error::error_status());
+                else
+                    i = m_handlers.get_size();
+                nrf_mtx_unlock(&m_mtx);
+            }
         }
 
     private:
 
-        static utils::static_function<void(error::error_status)> m_handler;
+        static nrf_mtx_t m_mtx;
+        static static_vector<utils::static_function<void(error::error_status)>, 5>  m_handlers;
     };
 
     template<nrfx_gpiote_pin_t PIN>
-    utils::static_function<void(error::error_status)> async_button<PIN>::m_handler;
+    static_vector<utils::static_function<void(error::error_status)>, 5> async_button<PIN>::m_handlers;
+
+    template<nrfx_gpiote_pin_t PIN>
+    nrf_mtx_t async_button<PIN>::m_mtx;
 }
