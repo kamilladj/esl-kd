@@ -5,7 +5,10 @@
 #include "error/error_status.hpp"
 #include "singleton_gpiote.hpp"
 #include "utils/static_vector.hpp"
-#include "utils/lock_guard.hpp"
+
+#include "lock_guard.hpp"
+#include "mutex.hpp"
+
 #include <stddef.h>
 
 
@@ -18,7 +21,6 @@ namespace nrf
 
         async_button(utils::static_function<void(error::error_status)> handler)
         {
-            nrf_mtx_init(&m_mtx);
             {
                 lock_guard lk(m_mtx);
                 m_handlers.push_back(handler);
@@ -26,10 +28,6 @@ namespace nrf
             gpiote_init();
         }
 
-        ~async_button()
-        {
-            nrf_mtx_destroy(&m_mtx);
-        }
 
     private:
 
@@ -61,7 +59,7 @@ namespace nrf
 
     private:
 
-        static nrf_mtx_t m_mtx;
+        static mutex m_mtx;
         static static_vector<utils::static_function<void(error::error_status)>, 5>  m_handlers;
     };
 
@@ -69,5 +67,5 @@ namespace nrf
     static_vector<utils::static_function<void(error::error_status)>, 5> async_button<PIN>::m_handlers;
 
     template<nrfx_gpiote_pin_t PIN>
-    nrf_mtx_t async_button<PIN>::m_mtx;
+    mutex async_button<PIN>::m_mtx;
 }
