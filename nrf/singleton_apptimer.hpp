@@ -7,23 +7,25 @@ namespace nrf
 {
     class singleton_apptimer
     {
-        public:
-            static singleton_apptimer& init()
-            {
-                static singleton_apptimer s;
-                return s;
-            }
+    public:
 
-            singleton_apptimer(const singleton_apptimer&) = delete;
-            singleton_apptimer& operator=(const singleton_apptimer&) = delete;
+        static singleton_apptimer& init()
+        {
+            static singleton_apptimer s;
+            return s;
+        }
 
-        private:
-            singleton_apptimer() 
-            {
-                nrf_drv_clock_init();
-                nrf_drv_clock_lfclk_request(NULL);
-                app_timer_init();
-            }
-            ~singleton_apptimer() {}
+        singleton_apptimer(const singleton_apptimer&) = delete;
+        singleton_apptimer& operator=(const singleton_apptimer&) = delete;
+
+    private:
+
+        singleton_apptimer() 
+        {
+            nrf_drv_clock_init();
+            nrf_drv_clock_lfclk_request(NULL);
+            app_timer_init();
+        }
+        ~singleton_apptimer() {}
     };
 }
