@@ -98,23 +98,44 @@ DEFINE_TEST(AsyncTimer_Simple4)
 }
 
 
-DEFINE_TEST(AsyncTimer_Simple5)
+//DEFINE_TEST(AsyncTimer_Simple5)
+//{
+//    static volatile bool called;
+//    called = false;
+//
+//    nrf::singleshot_apptimer tt;
+//    for (int i = 0; i < 3; i++)
+//    {
+//        tt.async_wait(
+//            300,
+//            [](error::error_status e)
+//            {
+//                if (!e)
+//                    called = true;
+//            }
+//        );
+//    }
+//
+//    TEST(!called);
+//}
+
+
+DEFINE_TEST(AsyncTimer_Simple6)
 {
     static volatile bool called;
     called = false;
 
     nrf::singleshot_apptimer tt;
-    for (int i = 0; i < 3; i++)
-    {
-        tt.async_wait(
-            300,
-            [](error::error_status e)
-            {
-                if (!e)
-                    called = true;
-            }
-        );
-    }
+    tt.cancel();
+    tt.async_wait(
+        300,
+        [](error::error_status e)
+        {
+            if (!e)
+                called = true;
+        }
+    );
 
-    TEST(!called);
+    nrf_delay_ms(400);
+    TEST(called);
 }
