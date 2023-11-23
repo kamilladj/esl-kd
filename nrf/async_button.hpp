@@ -11,7 +11,6 @@
 
 #include <stddef.h>
 
-
 namespace nrf
 {
     template<nrfx_gpiote_pin_t PIN>
@@ -49,8 +48,8 @@ namespace nrf
 
         static void button_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
         {
-            static size_t i = m_handlers.get_size();
             lock_guard lk(m_mtx);
+            static size_t i = m_handlers.get_size();
             if (i-- > 0)
                 (m_handlers[i])(error::error_status());
             else
@@ -59,13 +58,13 @@ namespace nrf
 
     private:
 
-        static mutex m_mtx;
+        static mutex                                                                m_mtx;
         static static_vector<utils::static_function<void(error::error_status)>, 5>  m_handlers;
     };
 
     template<nrfx_gpiote_pin_t PIN>
-    static_vector<utils::static_function<void(error::error_status)>, 5> async_button<PIN>::m_handlers;
+    mutex async_button<PIN>::m_mtx;
 
     template<nrfx_gpiote_pin_t PIN>
-    mutex async_button<PIN>::m_mtx;
+    static_vector<utils::static_function<void(error::error_status)>, 5> async_button<PIN>::m_handlers;
 }
