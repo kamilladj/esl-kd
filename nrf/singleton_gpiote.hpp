@@ -19,7 +19,7 @@ namespace nrf
 
     private:
 
-        singleton_gpiote() 
+        singleton_gpiote()
         {
             nrfx_gpiote_init();
         }

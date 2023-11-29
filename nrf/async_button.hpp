@@ -4,6 +4,7 @@
 #include "utils/static_function.hpp"
 #include "error/error_status.hpp"
 #include "singleton_gpiote.hpp"
+#include "singleton_gpiote_config.hpp"
 #include "utils/static_vector.hpp"
 
 #include "lock_guard.hpp"
@@ -20,46 +21,36 @@ namespace nrf
 
         async_button(utils::static_function<void(error::error_status)> handler)
         {
-            {
-                lock_guard lk(m_mtx);
-                m_handlers.push_back(handler);
-            }
-            gpiote_init();
-        }
-
-
-    private:
-
-        void gpiote_init()
-        {
             singleton_gpiote::init();
+            singleton_gpiote_config<PIN>::init(button_handler);
 
-            nrfx_gpiote_in_config_t in_config = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);
-            in_config.pull = NRF_GPIO_PIN_PULLUP;
-
-            //Configuring 
-            error::error_status err = nrfx_gpiote_in_init(PIN, &in_config, button_handler);
-
-            if (!err)
-                nrfx_gpiote_in_event_enable(PIN, true);
+            lock_guard lk(m_mtx);
+            m_handlers.push_back(handler);
         }
 
     private:
 
         static void button_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
         {
-            lock_guard lk(m_mtx);
-            static size_t i = m_handlers.get_size();
-            if (i-- > 0)
-                (m_handlers[i])(error::error_status());
-            else
-                i = m_handlers.get_size();
+            handlers_vector tmp;
+
+            {
+                lock_guard lk(m_mtx);
+                tmp = m_handlers;
+            }
+
+            for (size_t i = 0; i < tmp.get_size(); i++)
+                tmp[i](error::error_status());
         }
 
     private:
 
-        static mutex                                                                m_mtx;
-        static static_vector<utils::static_function<void(error::error_status)>, 5>  m_handlers;
+        typedef static_vector<utils::static_function<void(error::error_status)>, 5> handlers_vector;
+
+    private:
+
+        static mutex           m_mtx;
+        static handlers_vector m_handlers;
     };
 
     template<nrfx_gpiote_pin_t PIN>

@@ -51,7 +51,7 @@
 #include "nrf_delay.h"
 #include "boards.h"
 
-#include "nrf/smart_button.hpp"
+#include "nrf/debounced_button.hpp"
 #include "error/error_status.hpp"
 #include "nrf_gpio.h"
 
@@ -68,9 +68,7 @@ void operator delete(void*, unsigned int)
 
 void my_handler(error::error_status e)
 {
-    if (e)
-        bsp_board_led_invert(1);
-    else
+    if (!e)
         bsp_board_led_invert(3);  // сработал через заданное кол-во мс
 }
 
@@ -80,12 +78,11 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    //nrf::smart_button<PIN> a([](error::error_status e) {if (!e) { bsp_board_led_on(0);  nrf_delay_ms(300); bsp_board_led_off(0); }});
-    //nrf::smart_button<PIN> b(my_handler);
+    nrf::async_button<PIN> a(my_handler);
+    nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
 
-    //nrf::async_button<PIN> a(my_handler);
-    //nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
-
+    //nrf::debounced_button<PIN> a(my_handler);
+    //nrf::debounced_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
 
     while (true)
     {
