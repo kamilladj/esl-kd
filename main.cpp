@@ -78,11 +78,11 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    nrf::async_button<PIN> a(my_handler);
-    nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
+    //nrf::async_button<PIN> a(my_handler);
+    //nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
 
-    //nrf::debounced_button<PIN> a(my_handler);
-    //nrf::debounced_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
+    nrf::debounced_button<PIN> a(my_handler);
+    nrf::debounced_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
 
     while (true)
     {
