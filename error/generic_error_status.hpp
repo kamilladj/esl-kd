@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <utility>
+
 namespace error
 {
 
