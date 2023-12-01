@@ -2,10 +2,11 @@
 
 #include "utils/static_function.hpp"
 #include "error/error_status.hpp"
-#include "singleshot_apptimer.hpp"
-#include "async_button.hpp"
 
-#define DEBOUNCE_TIMER_TIME_MS 10
+#include "debounced_button.hpp"
+#include "atomic_32.hpp"
+
+#define DOUBLE_CLICK_TIMER_TIME_MS 500
 
 namespace nrf
 {
@@ -14,35 +15,42 @@ namespace nrf
     {
     public:
 
-        smart_button(utils::static_function<void(error::error_status)> handler)
-            : m_debounce_timer{}
-            , m_async_button{ [this](error::error_status e) { async_button_handler(e); } }
+        smart_button(utils::static_function<void(button_events)> handler)
+            : m_double_click_timer{}
+            , m_click_num{}
+            , m_debounced_button{ [this](button_events evt) { debounced_button_handler(evt); } }
             , m_handler{}
         {
-                m_handler = handler;
+            m_handler = handler;
         }
 
     private:
 
-        void async_button_handler(error::error_status e)
+        void debounced_button_handler(button_events evt)
         {
-            if (!e)
+            if (evt == on_click_down)
             {
-                error::error_status err = m_debounce_timer.cancel();
-                if (!err)
-                    m_debounce_timer.async_wait(DEBOUNCE_TIMER_TIME_MS, [this](error::error_status e) { timer_handler(e); });
+                m_click_num++;
+                m_double_click_timer.async_wait(DOUBLE_CLICK_TIMER_TIME_MS, [this](error::error_status e) { double_click_timer_handler(e); });
             }
         }
 
-        void timer_handler(error::error_status e)
+        void double_click_timer_handler(error::error_status e)
         {
-            m_handler(e);
+            if (!e)
+            {
+                if (m_click_num == 2)
+                    m_handler(on_click_double);
+
+                m_click_num = 0;
+            }
         }
 
     private:
 
-        singleshot_apptimer                               m_debounce_timer;
-        async_button<PIN>                                 m_async_button;
-        utils::static_function<void(error::error_status)> m_handler;
+        singleshot_apptimer                         m_double_click_timer;
+        atomic_32                                   m_click_num;
+        debounced_button<PIN>                       m_debounced_button;
+        utils::static_function<void(button_events)> m_handler;
     };
 }

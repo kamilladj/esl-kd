@@ -1,10 +1,10 @@
 #pragma once
 
 #include "nrf_drv_gpiote.h"
-#include "utils/static_function.hpp"
-#include "error/error_status.hpp"
 #include "singleton_gpiote.hpp"
 #include "singleton_gpiote_config.hpp"
+
+#include "utils/static_function.hpp"
 #include "utils/static_vector.hpp"
 
 #include "lock_guard.hpp"
@@ -19,7 +19,7 @@ namespace nrf
     {
     public:
 
-        async_button(utils::static_function<void(error::error_status)> handler)
+        async_button(utils::static_function<void()> handler)
         {
             singleton_gpiote::init();
             singleton_gpiote_config<PIN>::init(button_handler);
@@ -40,12 +40,12 @@ namespace nrf
             }
 
             for (size_t i = 0; i < tmp.get_size(); i++)
-                tmp[i](error::error_status());
+                tmp[i]();
         }
 
     private:
 
-        typedef static_vector<utils::static_function<void(error::error_status)>, 5> handlers_vector;
+        typedef static_vector<utils::static_function<void()>, 5> handlers_vector;
 
     private:
 
@@ -57,5 +57,5 @@ namespace nrf
     mutex async_button<PIN>::m_mtx;
 
     template<nrfx_gpiote_pin_t PIN>
-    static_vector<utils::static_function<void(error::error_status)>, 5> async_button<PIN>::m_handlers;
+    static_vector<utils::static_function<void()>, 5> async_button<PIN>::m_handlers;
 }

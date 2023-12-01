@@ -48,12 +48,15 @@
   *
   */
 
-#include "nrf_delay.h"
 #include "boards.h"
-
-#include "nrf/debounced_button.hpp"
-#include "error/error_status.hpp"
+#include "nrf_delay.h"
 #include "nrf_gpio.h"
+
+#include "error/error_status.hpp"
+
+#include "nrf/async_button.hpp"
+#include "nrf/debounced_button.hpp"
+#include "nrf/smart_button.hpp"
 
 /**
  * @brief Function for application main entry.
@@ -66,10 +69,14 @@ void operator delete(void*, unsigned int)
 {}
 
 
-void my_handler(error::error_status e)
+void my_handler()
 {
-    if (!e)
-        bsp_board_led_invert(3);  // сработал через заданное кол-во мс
+    bsp_board_led_invert(3);  // сработал через заданное кол-во мс
+}
+
+void my_handler_with_event(nrf::button_events evt)
+{
+    bsp_board_led_invert(1);
 }
 
 
@@ -79,10 +86,13 @@ int main(void)
     bsp_board_init(BSP_INIT_LEDS);
 
     //nrf::async_button<PIN> a(my_handler);
-    //nrf::async_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
+    //nrf::async_button<PIN> b([]() { bsp_board_led_invert(0); });
 
-    nrf::debounced_button<PIN> a(my_handler);
-    nrf::debounced_button<PIN> b([](error::error_status e) {if (!e) bsp_board_led_invert(0); });
+    //nrf::debounced_button<PIN> a(my_handler_with_event);
+    //nrf::debounced_button<PIN> b([](nrf::button_events evt) { bsp_board_led_invert(0); });
+
+    nrf::smart_button<PIN> a(my_handler_with_event);
+    nrf::smart_button<PIN> b([](nrf::button_events evt) { bsp_board_led_invert(0); });
 
     while (true)
     {
