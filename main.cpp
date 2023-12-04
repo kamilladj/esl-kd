@@ -57,26 +57,71 @@
 #include "nrf/async_button.hpp"
 #include "nrf/debounced_button.hpp"
 #include "nrf/smart_button.hpp"
+#include "nrf/singleshot_apptimer.hpp"
+#include "nrf/atomic_32.hpp"
+
+#include <stddef.h>
+#include <stdbool.h>
 
 /**
  * @brief Function for application main entry.
  */
 
-#define PIN NRF_GPIO_PIN_MAP(1,6)
+#define ID_NUMBER 4235
+#define digit1 ID_NUMBER%10
+#define digit2 ID_NUMBER/10%10
+#define digit3 ID_NUMBER/100%10
+#define digit4 ID_NUMBER/1000%10
+
+#define LEDS_NUMBER 4
+
+#define BLINK_DELAY_MS 300
+
+#define BUTTON NRF_GPIO_PIN_MAP(1,6)
 
 
 void operator delete(void*, unsigned int)
 {}
 
 
-void my_handler()
+nrf::atomic_32 blink_enable;
+
+
+struct LED
 {
-    bsp_board_led_invert(3);  // сработал через заданное кол-во мс
+    size_t led_id;
+    size_t blink_times;
+} leds_list[LEDS_NUMBER] = { { 0 , digit4 },{ 1, digit3 },{ 2, digit2 },{ 3 , digit1 } };
+
+LED* leds = leds_list;
+
+
+void my_handler(nrf::button_events evt)
+{
+    blink_enable = true;
+
+    if (evt == nrf::on_click_up)
+        blink_enable = false;
 }
 
-void my_handler_with_event(nrf::button_events evt)
+
+void blink_timer_handler(error::error_status e)
 {
-    bsp_board_led_invert(1);
+    static size_t cnt;
+
+    if (cnt++ < leds->blink_times * 2)
+    {
+        bsp_board_led_invert(leds->led_id);
+    }
+    else
+    {
+        if (leds->led_id != 3)
+            ++leds;
+        else
+            leds = leds_list;
+
+        cnt = 0;
+    }
 }
 
 
@@ -85,14 +130,16 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    //nrf::async_button<PIN> a(my_handler);
-    //nrf::async_button<PIN> b([]() { bsp_board_led_invert(0); });
+    nrf::debounced_button<BUTTON> a(my_handler);
 
-    //nrf::debounced_button<PIN> a(my_handler_with_event);
-    //nrf::debounced_button<PIN> b([](nrf::button_events evt) { bsp_board_led_invert(0); });
+    nrf::singleshot_apptimer blink_timer;
 
-    nrf::smart_button<PIN> a(my_handler_with_event);
-    nrf::smart_button<PIN> b([](nrf::button_events evt) { bsp_board_led_invert(0); });
+    while (true)
+    {
+        if (blink_enable)
+            blink_timer.async_wait(BLINK_DELAY_MS, blink_timer_handler);
+    }
+
 
     while (true)
     {
