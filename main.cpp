@@ -91,36 +91,33 @@ void blink_timer_handler(error::error_status e, nrf::singleshot_apptimer& blink_
     static size_t cur_index = 0;
     static size_t cnt = 0;
 
-    if (cnt++ < 2)
-    {
-        bsp_board_led_invert(g_all_leds[cur_index]);
-    }
-    else
-    {
-        if (cur_index == g_all_leds_size - 1)
-            cur_index = 0;
-        else
-            ++cur_index;
-
-        cnt = 0;
-    }
-
     if (g_is_blink_enabled)
-        blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
+    {
+        if (cnt++ < 2)
+        {
+            bsp_board_led_invert(g_all_leds[cur_index]);
+        }
+        else
+        {
+            if (cur_index == g_all_leds_size - 1)
+                cur_index = 0;
+            else
+                ++cur_index;
+
+            cnt = 0;
+        }
+    }
+
+    blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
 }
 
 
 void button_event_handler(nrf::button_events evt, nrf::singleshot_apptimer& blink_timer)
 {
     if (evt == nrf::on_click_up)
-    {
         g_is_blink_enabled = false;
-    }
     else
-    {
         g_is_blink_enabled = true;
-        blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
-    }
 }
 
 
@@ -132,6 +129,9 @@ int main(void)
     nrf::singleshot_apptimer blink_timer;
 
     nrf::debounced_button<BUTTON> a([&blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_timer); });
+
+    while (!g_is_blink_enabled);
+    blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
 
 
     while (true)
