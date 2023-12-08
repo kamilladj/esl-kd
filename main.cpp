@@ -57,11 +57,9 @@
 #include "nrf/debounced_button.hpp"
 #include "nrf/smart_button.hpp"
 #include "nrf/singleshot_apptimer.hpp"
-#include "nrf/atomic_32.hpp"
-#include "nrf/blink_on_event_manager.hpp"
+#include "nrf/blink_event_manager.hpp"
 
-#include <stddef.h>
-#include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @brief Function for application main entry.
@@ -76,10 +74,9 @@ void operator delete(void*, unsigned int)
 
 
 const uint32_t g_delay_ms = 200;
-nrf::atomic_32 g_is_blink_enabled;
 
 
-void blink_timer_handler(error::error_status e, nrf::blink_on_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
+void blink_timer_handler(error::error_status e, nrf::blink_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
 {
     blink_manager.handle_event();
 
@@ -87,12 +84,9 @@ void blink_timer_handler(error::error_status e, nrf::blink_on_event_manager& bli
 }
 
 
-void button_event_handler(nrf::button_events evt, nrf::singleshot_apptimer& blink_timer)
+void button_event_handler(nrf::button_events evt, nrf::blink_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
 {
-    if (evt == nrf::on_click_up)
-        g_is_blink_enabled = false;
-    else
-        g_is_blink_enabled = true;
+    blink_manager.enable(evt == nrf::on_click_down);
 }
 
 
@@ -101,10 +95,10 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    nrf::blink_on_event_manager blink_manager;
+    nrf::blink_event_manager blink_manager;
     nrf::singleshot_apptimer blink_timer;
 
-    nrf::debounced_button<BUTTON> a([&blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_timer); });
+    nrf::debounced_button<BUTTON> a([&blink_manager, &blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_manager, blink_timer); });
 
     blink_timer.async_wait(g_delay_ms, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
 
