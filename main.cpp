@@ -49,7 +49,6 @@
   */
 
 #include "boards.h"
-#include "nrf_delay.h"
 #include "nrf_gpio.h"
 
 #include "error/error_status.hpp"
@@ -67,15 +66,12 @@
  * @brief Function for application main entry.
  */
 
-#define ID_NUMBER 4235
-#define digit1 ID_NUMBER%10
-#define digit2 ID_NUMBER/10%10
-#define digit3 ID_NUMBER/100%10
-#define digit4 ID_NUMBER/1000%10
 
-#define LEDS_NUMBER 4
-
-#define BLINK_DELAY_MS 300
+#define ID 4231
+#define DIGIT1 ID/1000%10
+#define DIGIT2 ID/100%10
+#define DIGIT3 ID/10%10
+#define DIGIT4 ID%10
 
 #define BUTTON NRF_GPIO_PIN_MAP(1,6)
 
@@ -84,43 +80,46 @@ void operator delete(void*, unsigned int)
 {}
 
 
-nrf::atomic_32 blink_enable;
+const uint32_t g_delay_ms = 200;
+const size_t   g_all_leds_size = DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4;
+nrf::atomic_32 g_is_blink_enabled;
+size_t         g_all_leds[] = { 0, 0, 0, 0, 1, 1, 2, 2, 2, 3 };
 
 
-struct LED
+void blink_timer_handler(error::error_status e, nrf::singleshot_apptimer& blink_timer)
 {
-    size_t led_id;
-    size_t blink_times;
-} leds_list[LEDS_NUMBER] = { { 0 , digit4 },{ 1, digit3 },{ 2, digit2 },{ 3 , digit1 } };
+    static size_t cur_index = 0;
+    static size_t cnt = 0;
 
-LED* leds = leds_list;
-
-
-void my_handler(nrf::button_events evt)
-{
-    blink_enable = true;
-
-    if (evt == nrf::on_click_up)
-        blink_enable = false;
-}
-
-
-void blink_timer_handler(error::error_status e)
-{
-    static size_t cnt;
-
-    if (cnt++ < leds->blink_times * 2)
+    if (cnt++ < 2)
     {
-        bsp_board_led_invert(leds->led_id);
+        bsp_board_led_invert(g_all_leds[cur_index]);
     }
     else
     {
-        if (leds->led_id != 3)
-            ++leds;
+        if (cur_index == g_all_leds_size - 1)
+            cur_index = 0;
         else
-            leds = leds_list;
+            ++cur_index;
 
         cnt = 0;
+    }
+
+    if (g_is_blink_enabled)
+        blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
+}
+
+
+void button_event_handler(nrf::button_events evt, nrf::singleshot_apptimer& blink_timer)
+{
+    if (evt == nrf::on_click_up)
+    {
+        g_is_blink_enabled = false;
+    }
+    else
+    {
+        g_is_blink_enabled = true;
+        blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
     }
 }
 
@@ -130,15 +129,9 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    nrf::debounced_button<BUTTON> a(my_handler);
-
     nrf::singleshot_apptimer blink_timer;
 
-    while (true)
-    {
-        if (blink_enable)
-            blink_timer.async_wait(BLINK_DELAY_MS, blink_timer_handler);
-    }
+    nrf::debounced_button<BUTTON> a([&blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_timer); });
 
 
     while (true)
