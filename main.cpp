@@ -37,52 +37,77 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-/** @file
- *
- * @defgroup blinky_example_main main.c
- * @{
- * @ingroup blinky_example
- * @brief Blinky Example Application main file.
- *
- * This file contains the source code for a sample application to blink LEDs.
- *
- */
+ /** @file
+  *
+  * @defgroup blinky_example_main main.c
+  * @{
+  * @ingroup blinky_example
+  * @brief Blinky Example Application main file.
+  *
+  * This file contains the source code for a sample application to blink LEDs.
+  *
+  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "nrf_delay.h"
 #include "boards.h"
+#include "nrf_gpio.h"
 
-#define ID_NUMBER 1379
+#include "error/error_status.hpp"
+
+#include "nrf/async_button.hpp"
+#include "nrf/debounced_button.hpp"
+#include "nrf/smart_button.hpp"
+#include "nrf/singleshot_apptimer.hpp"
+#include "nrf/blink_event_manager.hpp"
+
+#include <stdint.h>
 
 /**
  * @brief Function for application main entry.
  */
+
+
+#define BUTTON NRF_GPIO_PIN_MAP(1,6)
+
+
+void operator delete(void*, unsigned int)
+{}
+
+
+const uint32_t g_delay_ms = 200;
+
+
+void blink_timer_handler(error::error_status e, nrf::blink_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
+{
+    blink_manager.handle_event();
+
+    blink_timer.async_wait(g_delay_ms, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
+}
+
+
+void button_event_handler(nrf::button_events evt, nrf::blink_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
+{
+    blink_manager.enable(evt == nrf::on_click_down);
+}
+
+
 int main(void)
 {
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    /* Toggle LEDs. */
+    nrf::blink_event_manager blink_manager;
+    nrf::singleshot_apptimer blink_timer;
+
+    nrf::debounced_button<BUTTON> a([&blink_manager, &blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_manager, blink_timer); });
+
+    blink_timer.async_wait(g_delay_ms, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
+
+
     while (true)
     {
-        int id = ID_NUMBER;
-        int count = 0;
-        int pos = 1000;
-        for (int i = 0; i < LEDS_NUMBER; i++, pos /= 10)
-        {
-            id -= count * pos * 10;
-            count = id / pos;
-            for (int j = 0; j < count; j++)
-            {
-                bsp_board_led_invert(i);
-                nrf_delay_ms(300);
-                bsp_board_led_invert(i);
-                nrf_delay_ms(300);
-            }
-
-            nrf_delay_ms(1000);
-        }
+        __SEV();
+        __WFE();
+        __WFE();
     }
 }
 
