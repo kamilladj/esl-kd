@@ -21,7 +21,7 @@ namespace nrf
         blink_event_manager()
             : m_cur_index{ 0 }
             , m_count{ 0 }
-            , m_is_blink_enabled{ false }
+            , m_is_blink_enabled{ 0 }
             , m_all_leds{ 0, 0, 0, 0, 1, 1, 2, 2, 2, 3 }
             , m_all_leds_size{ DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4 }
         {}
