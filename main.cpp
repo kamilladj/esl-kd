@@ -58,6 +58,7 @@
 #include "nrf/smart_button.hpp"
 #include "nrf/singleshot_apptimer.hpp"
 #include "nrf/atomic_32.hpp"
+#include "nrf/blink_on_event_manager.hpp"
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -67,12 +68,6 @@
  */
 
 
-#define ID 4231
-#define DIGIT1 ID/1000%10
-#define DIGIT2 ID/100%10
-#define DIGIT3 ID/10%10
-#define DIGIT4 ID%10
-
 #define BUTTON NRF_GPIO_PIN_MAP(1,6)
 
 
@@ -81,34 +76,14 @@ void operator delete(void*, unsigned int)
 
 
 const uint32_t g_delay_ms = 200;
-const size_t   g_all_leds_size = DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4;
 nrf::atomic_32 g_is_blink_enabled;
-size_t         g_all_leds[] = { 0, 0, 0, 0, 1, 1, 2, 2, 2, 3 };
 
 
-void blink_timer_handler(error::error_status e, nrf::singleshot_apptimer& blink_timer)
+void blink_timer_handler(error::error_status e, nrf::blink_on_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
 {
-    static size_t cur_index = 0;
-    static size_t cnt = 0;
+    blink_manager.handle_event();
 
-    if (g_is_blink_enabled)
-    {
-        if (cnt++ < 2)
-        {
-            bsp_board_led_invert(g_all_leds[cur_index]);
-        }
-        else
-        {
-            if (cur_index == g_all_leds_size - 1)
-                cur_index = 0;
-            else
-                ++cur_index;
-
-            cnt = 0;
-        }
-    }
-
-    blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
+    blink_timer.async_wait(g_delay_ms, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
 }
 
 
@@ -126,12 +101,12 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
+    nrf::blink_on_event_manager blink_manager;
     nrf::singleshot_apptimer blink_timer;
 
     nrf::debounced_button<BUTTON> a([&blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_timer); });
 
-    while (!g_is_blink_enabled);
-    blink_timer.async_wait(g_delay_ms, [&blink_timer](error::error_status e) { blink_timer_handler(e, blink_timer); });
+    blink_timer.async_wait(g_delay_ms, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
 
 
     while (true)
