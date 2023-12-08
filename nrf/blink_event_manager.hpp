@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boards.h"
+#include "nrf/atomic_32.hpp"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -54,10 +55,10 @@ namespace nrf
 
     private:
 
-        size_t       m_cur_index;
-        size_t       m_count;
-        bool         m_is_blink_enabled;
-        const size_t m_all_leds[DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4];
-        const size_t m_all_leds_size;
+        size_t         m_cur_index;
+        size_t         m_count;
+        nrf::atomic_32 m_is_blink_enabled;
+        const size_t   m_all_leds[DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4];
+        const size_t   m_all_leds_size;
     };
 }
