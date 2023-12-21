@@ -57,7 +57,7 @@
 #include "nrf/debounced_button.hpp"
 #include "nrf/smart_button.hpp"
 #include "nrf/singleshot_apptimer.hpp"
-#include "nrf/blink_event_manager.hpp"
+#include "nrf/blink_event_pwm_manager.hpp"
 
 #include <stdint.h>
 
@@ -76,7 +76,7 @@ void operator delete(void*, unsigned int)
 const uint32_t g_delay_ms = 200;
 
 
-void blink_timer_handler(error::error_status e, nrf::blink_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
+void blink_timer_handler(error::error_status e, nrf::blink_event_pwm_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
 {
     blink_manager.handle_event();
 
@@ -84,7 +84,7 @@ void blink_timer_handler(error::error_status e, nrf::blink_event_manager& blink_
 }
 
 
-void button_event_handler(nrf::button_events evt, nrf::blink_event_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
+void button_event_handler(nrf::button_events evt, nrf::blink_event_pwm_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
 {
     blink_manager.enable(evt == nrf::on_click_down);
 }
@@ -95,7 +95,7 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
-    nrf::blink_event_manager blink_manager;
+    nrf::blink_event_pwm_manager blink_manager;
     nrf::singleshot_apptimer blink_timer;
 
     nrf::debounced_button<BUTTON> a([&blink_manager, &blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_manager, blink_timer); });
