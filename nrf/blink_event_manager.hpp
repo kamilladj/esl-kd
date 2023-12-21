@@ -1,7 +1,9 @@
 #pragma once
 
 #include "boards.h"
+
 #include "nrf/atomic_32.hpp"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -11,6 +13,7 @@
 #define DIGIT3 ID/10%10
 #define DIGIT4 ID%10
 
+enum { blink_on, blink_off };
 
 namespace nrf
 {
@@ -21,7 +24,7 @@ namespace nrf
         blink_event_manager()
             : m_cur_index{ 0 }
             , m_count{ 0 }
-            , m_is_blink_enabled{ 0 }
+            , m_blink_state{ blink_off }
             , m_all_leds{ 0, 0, 0, 0, 1, 1, 2, 2, 2, 3 }
             , m_all_leds_size{ DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4 }
         {}
@@ -30,12 +33,15 @@ namespace nrf
 
         void enable(bool cond)
         {
-            m_is_blink_enabled = cond;
+            if (cond)
+                m_blink_state = blink_on;
+            else
+                m_blink_state = blink_off;
         }
 
         void handle_event()
         {
-            if (m_is_blink_enabled)
+            if (m_blink_state == blink_on)
             {
                 if (m_count++ < 2)
                 {
@@ -57,7 +63,7 @@ namespace nrf
 
         size_t         m_cur_index;
         size_t         m_count;
-        nrf::atomic_32 m_is_blink_enabled;
+        atomic_32      m_blink_state;
         const size_t   m_all_leds[DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4];
         const size_t   m_all_leds_size;
     };
