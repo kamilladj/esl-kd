@@ -3273,6 +3273,13 @@
 #define NRFX_GPIOTE_CONFIG_IRQ_PRIORITY 6
 #endif
 
+// <q> NRFX_SYSTICK_ENABLED  - nrfx_systick - SysTick driver
+
+
+#ifndef NRFX_SYSTICK_ENABLED
+#define NRFX_SYSTICK_ENABLED 1
+#endif
+
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H
 
