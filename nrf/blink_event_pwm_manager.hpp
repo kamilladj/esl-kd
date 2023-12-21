@@ -5,6 +5,7 @@
 
 #include "nrf/atomic_32.hpp"
 #include "nrf/systick.hpp"
+#include "nrf/pwm.hpp"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -54,27 +55,27 @@ namespace nrf
                 m_in_action = true;
             }
 
-            if (m_timer.test(m_pwm.time_to_wait_ms))
+            if (m_timer.test(m_pwm.get_time_to_wait_ms()))
             {
                 if (m_blink_state == blink_on)
                 {
-                    if (m_pwm.duty_cycle > 0)
+                    if (m_pwm.get_duty_cycle() > 0)
                     {
                         bsp_board_led_invert(m_all_leds[m_cur_index]);
                         m_is_led_on = !m_is_led_on;
                         m_count++;
                     }
 
-                    change_duty_cycle();
+                    m_pwm.update_duty_cycle();
 
-                    if (m_pwm.duty_cycle == 0)
+                    if (m_pwm.get_duty_cycle() == 0)
                     {
                         bsp_board_led_off(m_all_leds[m_cur_index]);
                         m_in_action = false;
                     }
                 }
 
-                update_time_to_wait_ms();
+                m_pwm.update_time_to_wait_ms(m_is_led_on);
                 m_timer.get();
             }
 
@@ -89,47 +90,6 @@ namespace nrf
 
     private:
 
-        void change_duty_cycle()
-        {
-            m_pwm.duty_cycle += m_pwm.step_value;
-
-            if (m_pwm.duty_cycle == 0 || m_pwm.duty_cycle == 100)
-                m_pwm.step_value = m_pwm.step_value * (-1);
-        }
-
-        void update_time_to_wait_ms()
-        {
-            m_pwm.time_on_ms = m_pwm.period_ms * m_pwm.duty_cycle / 100;
-            m_pwm.time_off_ms = m_pwm.period_ms - m_pwm.time_on_ms;
-
-            m_pwm.time_to_wait_ms = m_is_led_on ? m_pwm.time_on_ms : m_pwm.time_off_ms;
-        }
-
-    private:
-
-        struct pwm_context
-        {
-            pwm_context()
-                : frequency{ 1000 }
-                , period_ms{ 1 / frequency * 1000 }
-                , step_value{ 1 }
-                , duty_cycle{ 0 }
-                , time_on_ms{ 0 }
-                , time_off_ms{ 0 }
-                , time_to_wait_ms{ 0 }
-            {}
-
-            const uint32_t frequency;
-            const uint32_t period_ms;
-            int32_t        step_value;
-            uint32_t       duty_cycle;
-            uint32_t       time_on_ms;
-            uint32_t       time_off_ms;
-            uint32_t       time_to_wait_ms;
-        };
-
-    private:
-
         size_t              m_cur_index;
         size_t              m_count;
         atomic_32           m_blink_state;
@@ -137,7 +97,7 @@ namespace nrf
         const size_t        m_all_leds_size;
         atomic_32           m_is_led_on;
         atomic_32           m_in_action;
-        pwm_context         m_pwm;
+        pwm                 m_pwm;
         systick             m_timer;
     };
 }
