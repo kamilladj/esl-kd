@@ -73,14 +73,14 @@ void operator delete(void*, unsigned int)
 {}
 
 
-const uint32_t g_delay_ms = 200;
+const uint32_t g_delay_us = 1000;
 
 
 void blink_timer_handler(error::error_status e, nrf::blink_event_pwm_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
 {
     blink_manager.handle_event();
 
-    blink_timer.async_wait(g_delay_ms, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
+    blink_timer.async_wait(g_delay_us / 1000, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
 }
 
 
@@ -100,7 +100,7 @@ int main(void)
 
     nrf::debounced_button<BUTTON> a([&blink_manager, &blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_manager, blink_timer); });
 
-    blink_timer.async_wait(g_delay_ms, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
+    blink_timer.async_wait(g_delay_us / 1000, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
 
 
     while (true)
