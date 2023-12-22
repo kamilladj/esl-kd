@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <stddef.h>
 
 #include "nrf/atomic_32.hpp"
 

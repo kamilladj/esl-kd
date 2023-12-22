@@ -29,9 +29,9 @@ namespace nrf
             nrfx_systick_get(&m_state);
         }
 
-        bool test(uint32_t ms)
+        bool test(uint32_t us)
         {
-            return nrfx_systick_test(&m_state, ms / 1000); //to us
+            return nrfx_systick_test(&m_state, us);
         }
 
     private:

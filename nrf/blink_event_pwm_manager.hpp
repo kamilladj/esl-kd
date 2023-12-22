@@ -9,7 +9,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 
 #include "nrf_delay.h"
 
@@ -64,9 +63,11 @@ namespace nrf
         void blink()
         {
             bsp_board_led_on(m_all_leds[m_cur_index]);
-            nrf_delay_us(m_pwm.get_time_on_us());
+            m_timer.get();
+            while (!m_timer.test(m_pwm.get_time_on_us()));
             bsp_board_led_off(m_all_leds[m_cur_index]);
-            nrf_delay_us(m_pwm.get_time_off_us());
+            m_timer.get();
+            while (!m_timer.test(m_pwm.get_time_off_us()));
         }
 
     private:
