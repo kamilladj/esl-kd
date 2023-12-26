@@ -35,6 +35,7 @@ namespace nrf
             , m_period_us{ 1000 }
             , m_step_value{ 2 }
             , m_duty_cycle{ 0 }
+            , m_double_click_num{ 0 }
         {}
 
     public:
@@ -42,9 +43,18 @@ namespace nrf
         void enable(bool cond)
         {
             if (cond)
-                m_blink_state = blink_on;
-            else
-                m_blink_state = blink_off;
+            {
+                ++m_double_click_num;
+                if (m_double_click_num == 1)
+                {
+                    m_blink_state = blink_on;
+                }
+                else
+                {
+                    m_blink_state = blink_off;
+                    m_double_click_num = 0;
+                }
+            }
         }
 
         void handle_event()
@@ -107,5 +117,6 @@ namespace nrf
         const uint32_t m_period_us;
         int32_t        m_step_value;
         uint32_t       m_duty_cycle;
+        atomic_32      m_double_click_num;
     };
 }
