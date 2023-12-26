@@ -5,12 +5,10 @@
 
 #include "nrf/atomic_32.hpp"
 #include "nrf/systick.hpp"
-#include "nrf/pwm.hpp"
 
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "nrf_delay.h"
+#include <stdint.h>
 
 #define ID 4231
 #define DIGIT1 ID/1000%10
@@ -31,8 +29,12 @@ namespace nrf
             , m_blink_state{ blink_off }
             , m_all_leds{ 0, 0, 0, 0, 1, 1, 2, 2, 2, 3 }
             , m_all_leds_size{ DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4 }
-            , m_pwm{}
             , m_timer{}
+            , m_delay_us{ 0 }
+            , m_is_led_on{ false }
+            , m_period_us{ 1000 }
+            , m_step_value{ 2 }
+            , m_duty_cycle{ 0 }
         {}
 
     public:
@@ -49,34 +51,61 @@ namespace nrf
         {
             if (m_blink_state == blink_on)
             {
-                m_pwm.change_duty_cycle();
-                blink();
-
-                if (m_pwm.get_duty_cycle() == 0)
+                if (m_timer.test(m_delay_us))
                 {
-                    m_cur_index++;
-                    m_cur_index %= m_all_leds_size;
+                    if (!m_is_led_on)
+                        change_duty_cycle();
+
+                    bsp_board_led_invert(m_all_leds[m_cur_index]);
+                    m_is_led_on = !m_is_led_on;
+
+                    if (m_duty_cycle == 0)
+                    {
+                        bsp_board_led_off(m_all_leds[m_cur_index]);
+                        m_is_led_on = false;
+                        ++m_cur_index;
+                        m_cur_index %= m_all_leds_size;
+                    }
+
+                    m_delay_us = m_is_led_on ? get_time_on_us() : get_time_off_us();
+                    m_timer.get();
                 }
             }
         }
 
-        void blink()
+    public:
+
+        uint32_t get_time_on_us()
         {
-            bsp_board_led_on(m_all_leds[m_cur_index]);
-            m_timer.get();
-            while (!m_timer.test(m_pwm.get_time_on_us()));
-            bsp_board_led_off(m_all_leds[m_cur_index]);
-            m_timer.get();
-            while (!m_timer.test(m_pwm.get_time_off_us()));
+            return m_period_us * m_duty_cycle / 100;
+        }
+
+        uint32_t get_time_off_us()
+        {
+            return m_period_us - get_time_on_us();
+        }
+
+    public:
+
+        void change_duty_cycle()
+        {
+            m_duty_cycle += m_step_value;
+
+            if (m_duty_cycle == 0 || m_duty_cycle == 100)
+                m_step_value *= -1;
         }
 
     private:
 
-        size_t              m_cur_index;
-        atomic_32           m_blink_state;
-        const size_t        m_all_leds[DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4];
-        const size_t        m_all_leds_size;
-        pwm                 m_pwm;
-        systick             m_timer;
+        size_t         m_cur_index;
+        atomic_32      m_blink_state;
+        const size_t   m_all_leds[DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4];
+        const size_t   m_all_leds_size;
+        systick        m_timer;
+        uint32_t       m_delay_us;
+        atomic_32      m_is_led_on;
+        const uint32_t m_period_us;
+        int32_t        m_step_value;
+        uint32_t       m_duty_cycle;
     };
 }
