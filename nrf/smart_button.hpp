@@ -30,6 +30,7 @@ namespace nrf
         {
             if (evt == on_click_down)
             {
+                m_handler(on_click_down);
                 m_click_num++;
                 m_double_click_timer.async_wait(DOUBLE_CLICK_TIMER_TIME_MS, [this](error::error_status e) { double_click_timer_handler(e); });
             }
