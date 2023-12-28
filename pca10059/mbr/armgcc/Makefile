@@ -89,6 +89,7 @@ CFLAGS += -fno-builtin -fshort-enums
 CFLAGS += -DAPP_TIMER_V2
 CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DNRFX_SYSTICK_ENABLED
+CFLAGS += -DUSE_APP_CONFIG
 
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)
