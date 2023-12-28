@@ -155,7 +155,7 @@
 // <e> NRF_LOG_ENABLED - nrf_log - Logger
 //==========================================================
 #ifndef NRF_LOG_ENABLED
-#define NRF_LOG_ENABLED 0
+#define NRF_LOG_ENABLED 1
 #endif
 // <h> Log message pool - Configuration of log message pool
 
@@ -215,7 +215,7 @@
 
 
 #ifndef NRF_LOG_CLI_CMDS
-#define NRF_LOG_CLI_CMDS 0
+#define NRF_LOG_CLI_CMDS 1
 #endif
 
 // <o> NRF_LOG_DEFAULT_LEVEL  - Default Severity level
@@ -243,7 +243,7 @@
 
 
 #ifndef NRF_LOG_FILTERS_ENABLED
-#define NRF_LOG_FILTERS_ENABLED 0
+#define NRF_LOG_FILTERS_ENABLED 1
 #endif
 
 // <q> NRF_LOG_NON_DEFFERED_CRITICAL_REGION_ENABLED  - Enable use of critical region for non deffered mode when flushing logs.
