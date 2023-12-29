@@ -10,6 +10,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+#include "nrf_log_backend_usb.h"
+
+#include "app_usbd.h"
+#include "app_usbd_serial_num.h"
+
 #define ID 4231
 #define DIGIT1 ID/1000%10
 #define DIGIT2 ID/100%10
@@ -66,6 +74,7 @@ namespace nrf
                     if (!m_is_led_on)
                         change_duty_cycle();
 
+                    NRF_LOG_INFO("LED %d inverted", m_all_leds[m_cur_index]);
                     bsp_board_led_invert(m_all_leds[m_cur_index]);
                     m_is_led_on = !m_is_led_on;
 
@@ -73,6 +82,7 @@ namespace nrf
                     {
                         bsp_board_led_off(m_all_leds[m_cur_index]);
                         m_is_led_on = false;
+                        NRF_LOG_INFO("NEXT LED");
                         ++m_cur_index;
                         m_cur_index %= m_all_leds_size;
                     }
