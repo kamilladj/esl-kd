@@ -123,16 +123,13 @@ int main(void)
 
     while (true)
     {
-        LOG_BACKEND_USB_PROCESS();
-        NRF_LOG_PROCESS();
-    }
-
-   /*while (true)
-    {
         __SEV();
         __WFE();
         __WFE();
-    }*/
+
+        LOG_BACKEND_USB_PROCESS();
+        NRF_LOG_PROCESS();
+    }
 }
 
 /**
