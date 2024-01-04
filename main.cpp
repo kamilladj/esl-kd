@@ -61,6 +61,14 @@
 
 #include <stdint.h>
 
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+#include "nrf_log_backend_usb.h"
+
+#include "app_usbd.h"
+#include "app_usbd_serial_num.h"
+
 /**
  * @brief Function for application main entry.
  */
@@ -74,6 +82,13 @@ void operator delete(void*, unsigned int)
 
 
 const uint32_t g_delay_us = 1000;
+
+
+void logs_init()
+{
+    NRF_LOG_INIT(NULL);
+    NRF_LOG_DEFAULT_BACKENDS_INIT();
+}
 
 
 void blink_timer_handler(error::error_status e, nrf::blink_event_pwm_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
@@ -95,6 +110,10 @@ int main(void)
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
 
+    logs_init();
+
+    NRF_LOG_INFO("Starting up the test project with USB logging");
+
     nrf::blink_event_pwm_manager blink_manager;
     nrf::singleshot_apptimer blink_timer;
 
@@ -102,12 +121,14 @@ int main(void)
 
     blink_timer.async_wait(g_delay_us / 1000, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
 
-
     while (true)
     {
         __SEV();
         __WFE();
         __WFE();
+
+        LOG_BACKEND_USB_PROCESS();
+        NRF_LOG_PROCESS();
     }
 }
 
