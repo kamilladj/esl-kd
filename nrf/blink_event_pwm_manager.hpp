@@ -93,7 +93,7 @@ namespace nrf
             }
         }
 
-    public:
+    private:
 
         uint32_t get_time_on_us()
         {
@@ -105,7 +105,7 @@ namespace nrf
             return m_period_us - get_time_on_us();
         }
 
-    public:
+    private:
 
         void change_duty_cycle()
         {
