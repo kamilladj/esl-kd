@@ -37,20 +37,11 @@ namespace nrf
         void enable(button_events evt)
         {
             if (evt == on_click_double)
-            {
-                NRF_LOG_INFO("Double click");
                 m_pwm_instance.double_click_handler();
-            }
             else if (evt == on_click_down)
-            {
-                NRF_LOG_INFO("Click down");
                 m_state = color_change_on;
-            }
             else
-            {
-                NRF_LOG_INFO("Click up");
                 m_state = color_change_off;
-            }
         }
 
         void pwm_handler()

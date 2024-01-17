@@ -111,9 +111,9 @@ int main(void)
 
     while (true)
     {
-        __SEV();
+        /*__SEV();
         __WFE();
-        __WFE();
+        __WFE();*/
 
         LOG_BACKEND_USB_PROCESS();
         NRF_LOG_PROCESS();
