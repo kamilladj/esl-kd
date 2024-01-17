@@ -15,6 +15,7 @@
 #include "app_usbd_serial_num.h"
 
 #define DOUBLE_CLICK_TIMER_TIME_MS 500
+#define SINGLE_CLICK_TIMER_TIME_MS 250
 
 namespace nrf
 {
@@ -25,6 +26,7 @@ namespace nrf
 
         smart_button(utils::static_function<void(button_events)> handler)
             : m_double_click_timer{}
+            , m_single_click_timer{}
             , m_click_num{}
             , m_debounced_button{ [this](button_events evt) { debounced_button_handler(evt); } }
             , m_handler{}
@@ -38,11 +40,28 @@ namespace nrf
         {
             m_handler(evt);
 
-            if (evt == on_click_down)
+            if (evt == on_click_up)
+            {
+                NRF_LOG_INFO("Click up");
+                m_click_num++;
+                m_single_click_timer.async_wait(SINGLE_CLICK_TIMER_TIME_MS, [this](error::error_status e) { single_click_timer_handler(e); });
+                m_double_click_timer.async_wait(DOUBLE_CLICK_TIMER_TIME_MS, [this](error::error_status e) { double_click_timer_handler(e); });
+            }
+            else
             {
                 NRF_LOG_INFO("Click down");
-                m_click_num++;
-                m_double_click_timer.async_wait(DOUBLE_CLICK_TIMER_TIME_MS, [this](error::error_status e) { double_click_timer_handler(e); });
+            }
+        }
+
+        void single_click_timer_handler(error::error_status e)
+        {
+            if (!e)
+            {
+                if (m_click_num == 1)
+                {
+                    NRF_LOG_INFO("Single click");
+                    m_handler(on_click_single);
+                }
             }
         }
 
@@ -63,6 +82,7 @@ namespace nrf
     private:
 
         singleshot_apptimer                         m_double_click_timer;
+        singleshot_apptimer                         m_single_click_timer;
         atomic_32                                   m_click_num;
         debounced_button<PIN>                       m_debounced_button;
         utils::static_function<void(button_events)> m_handler;

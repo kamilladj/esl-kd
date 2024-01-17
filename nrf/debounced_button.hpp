@@ -11,7 +11,7 @@
 
 namespace nrf
 {
-    enum button_events { on_click_down, on_click_up, on_click_double };
+    enum button_events { on_click_down, on_click_up, on_click_single, on_click_double };
 
     template<nrfx_gpiote_pin_t PIN>
     class debounced_button
