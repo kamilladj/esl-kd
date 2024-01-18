@@ -19,11 +19,6 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "app_usbd.h"
-#include "app_usbd_serial_num.h"
-
-#define PWM_PLAYBACK_COUNT 10
-
 enum blink_modes { default_mode, hue_mode, saturation_mode, value_mode };
 
 namespace nrf

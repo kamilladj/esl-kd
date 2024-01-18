@@ -11,9 +11,6 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "app_usbd.h"
-#include "app_usbd_serial_num.h"
-
 #define DOUBLE_CLICK_TIMER_TIME_MS 500
 
 namespace nrf
