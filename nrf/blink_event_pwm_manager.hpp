@@ -14,7 +14,7 @@ namespace nrf
 
         blink_event_pwm_manager()
             : m_state{ color_change_off }
-            , m_pwm_instance{ [this]() { pwm_handler(); } }
+            , m_pwm{ [this]() { pwm_handler(); } }
         {}
 
     public:
@@ -22,7 +22,7 @@ namespace nrf
         void enable(button_events evt)
         {
             if (evt == on_click_double)
-                m_pwm_instance.double_click_handler();
+                m_pwm.double_click_handler();
             else if (evt == on_click_down)
                 m_state = color_change_on;
             else
@@ -31,16 +31,17 @@ namespace nrf
 
         void pwm_handler()
         {
-            m_pwm_instance.update_led1();
-            if (m_state == color_change_on)
-                m_pwm_instance.update_hsv();
+            m_pwm.update_led1();
 
-            m_pwm_instance.update_led2();
+            if (m_state == color_change_on)
+                m_pwm.update_hsv();
+
+            m_pwm.update_led2();
         }
 
     private:
 
         atomic_32 m_state;
-        pwm<0>    m_pwm_instance;
+        pwm<0>    m_pwm;
     };
 }
