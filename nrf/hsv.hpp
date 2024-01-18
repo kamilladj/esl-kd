@@ -13,7 +13,7 @@ namespace nrf
     public:
 
         hsv()
-            : m_hue{79}
+            : m_hue{(ID%100)*255/100}
             , m_sat{255}
             , m_val{255}
             , m_step_value{1}
@@ -25,7 +25,7 @@ namespace nrf
         {
             m_hue += m_step_value;
 
-            if (m_hue == 0 || m_hue == 255)
+            if (m_hue <= 0 || m_hue >= 255)
                 m_step_value *= -1;
         }
 
@@ -33,7 +33,7 @@ namespace nrf
         {
             m_sat += m_step_value;
 
-            if (m_sat == 0 || m_sat == 255)
+            if (m_sat <= 0 || m_sat >= 255)
                 m_step_value *= -1;
         }
 
@@ -41,7 +41,7 @@ namespace nrf
         {
             m_val += m_step_value;
 
-            if (m_val == 0 || m_val == 255)
+            if (m_val <= 0 || m_val >= 255)
                 m_step_value *= -1;
         }
 
@@ -90,9 +90,9 @@ namespace nrf
 
     private:
 
-        uint16_t    m_hue; //degrees
-        uint16_t    m_sat;
-        uint16_t    m_val;
-        int16_t     m_step_value;
+        uint16_t m_hue; //degrees
+        uint16_t m_sat;
+        uint16_t m_val;
+        uint16_t m_step_value;
     };
 }
