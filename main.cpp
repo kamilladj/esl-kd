@@ -49,27 +49,15 @@
   */
 
 #include "boards.h"
-#include "nrf_gpio.h"
 
-#include "error/error_status.hpp"
-
-#include "nrf/async_button.hpp"
-#include "nrf/debounced_button.hpp"
 #include "nrf/smart_button.hpp"
-#include "nrf/singleshot_apptimer.hpp"
 #include "nrf/blink_event_pwm_manager.hpp"
-
-#include <stdint.h>
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "app_usbd.h"
-#include "app_usbd_serial_num.h"
-
-#include "nrfx_pwm.h"
 
 /**
  * @brief Function for application main entry.
