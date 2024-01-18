@@ -30,29 +30,43 @@ namespace nrf
 
         pwm(utils::static_function<void()> handler)
             : m_blink_mode{ default_mode }
-            , m_step_value{ 1 }
-            , m_pwm{}
+            , m_step_value{ 0 }
+            , m_playback_count{ 1 }
+            , m_pwm_instance{}
             , m_seq_values{}
             , m_seq{}
             , m_hsv{}
             , m_rgb{}
         {
-            nrfx_pwm_config_t config = NRFX_PWM_DEFAULT_CONFIG;
-            error::error_status err = nrfx_pwm_init(&m_pwm, &config, static_handler);
+            error::error_status err = init();
 
-            m_seq.values.p_individual = &m_seq_values;
-            m_seq.length = NRF_PWM_VALUES_LENGTH(m_seq_values);
-            m_seq.repeats = 0;
-            m_seq.end_delay = 0;
-
-            if (!err)
             {
-                NRF_LOG_INFO("Playback started");
-                nrfx_pwm_simple_playback(&m_pwm, &m_seq, PWM_PLAYBACK_COUNT, NRFX_PWM_FLAG_LOOP);
+                lock_guard lk(m_mtx);
+                m_handlers.push_back(handler);
             }
 
-            lock_guard lk(m_mtx);
-            m_handlers.push_back(handler);
+            if (!err)
+                playback();
+        }
+
+    private:
+
+        error::error_status init()
+        {
+            m_pwm_instance = NRFX_PWM_INSTANCE(0);
+            nrfx_pwm_config_t config = NRFX_PWM_DEFAULT_CONFIG;
+
+            return nrfx_pwm_init(&m_pwm_instance, &config, static_handler);
+        }
+
+    private:
+
+        void playback()
+        {
+            m_seq.values.p_individual = &m_seq_values;
+            m_seq.length = NRF_PWM_VALUES_LENGTH(m_seq_values);
+
+            nrfx_pwm_simple_playback(&m_pwm_instance, &m_seq, m_playback_count, NRFX_PWM_FLAG_LOOP);
         }
 
     public:
@@ -60,6 +74,7 @@ namespace nrf
         void change_mode()
         {
             NRF_LOG_INFO("Change mode");
+
             if (m_blink_mode == default_mode)
                 m_blink_mode = hue_mode;
             else if (m_blink_mode == hue_mode)
@@ -76,7 +91,7 @@ namespace nrf
         {
             m_seq_values.channel_0 += m_step_value;
 
-            if (m_seq_values.channel_0 == 0 || m_seq_values.channel_0 == 255)
+            if (m_seq_values.channel_0 <= 0 || m_seq_values.channel_0 >= 255)
                 m_step_value *= -1;
         }
 
@@ -93,6 +108,7 @@ namespace nrf
         void update_hsv()
         {
             NRF_LOG_INFO("Update hsv");
+
             if (m_blink_mode == hue_mode)
                 m_hsv.update_hue();
             else if (m_blink_mode == saturation_mode)
@@ -107,7 +123,6 @@ namespace nrf
 
         void double_click_handler()
         {
-            NRF_LOG_INFO("Double click handler");
             change_mode();
 
             m_seq_values.channel_0 = 0;
@@ -118,7 +133,7 @@ namespace nrf
             }
             else if (m_blink_mode == saturation_mode)
             {
-                m_step_value = 20;
+                m_step_value = 25;
             }
             else if (m_blink_mode == value_mode)
             {
@@ -153,8 +168,9 @@ namespace nrf
     private:
 
         atomic_32                   m_blink_mode;
-        int16_t                     m_step_value;
-        nrfx_pwm_t                  m_pwm;
+        uint16_t                    m_step_value;
+        const uint16_t              m_playback_count;
+        nrfx_pwm_t                  m_pwm_instance;
         nrf_pwm_values_individual_t m_seq_values;
         nrf_pwm_sequence_t          m_seq;
         hsv                         m_hsv;
