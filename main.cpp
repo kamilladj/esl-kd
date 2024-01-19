@@ -49,25 +49,15 @@
   */
 
 #include "boards.h"
-#include "nrf_gpio.h"
 
-#include "error/error_status.hpp"
-
-#include "nrf/async_button.hpp"
-#include "nrf/debounced_button.hpp"
 #include "nrf/smart_button.hpp"
-#include "nrf/singleshot_apptimer.hpp"
 #include "nrf/blink_event_pwm_manager.hpp"
-
-#include <stdint.h>
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "app_usbd.h"
-#include "app_usbd_serial_num.h"
 
 /**
  * @brief Function for application main entry.
@@ -81,9 +71,6 @@ void operator delete(void*, unsigned int)
 {}
 
 
-const uint32_t g_delay_us = 1000;
-
-
 void logs_init()
 {
     NRF_LOG_INIT(NULL);
@@ -91,17 +78,9 @@ void logs_init()
 }
 
 
-void blink_timer_handler(error::error_status e, nrf::blink_event_pwm_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
+void button_event_handler(nrf::button_events evt, nrf::blink_event_pwm_manager& blink_manager)
 {
-    blink_manager.handle_event();
-
-    blink_timer.async_wait(g_delay_us / 1000, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
-}
-
-
-void button_event_handler(nrf::button_events evt, nrf::blink_event_pwm_manager& blink_manager, nrf::singleshot_apptimer& blink_timer)
-{
-    blink_manager.enable(evt == nrf::on_click_double);
+    blink_manager.enable(evt);
 }
 
 
@@ -115,17 +94,14 @@ int main(void)
     NRF_LOG_INFO("Starting up the test project with USB logging");
 
     nrf::blink_event_pwm_manager blink_manager;
-    nrf::singleshot_apptimer blink_timer;
 
-    nrf::smart_button<BUTTON> a([&blink_manager, &blink_timer](nrf::button_events evt) { button_event_handler(evt, blink_manager, blink_timer); });
-
-    blink_timer.async_wait(g_delay_us / 1000, [&blink_manager, &blink_timer](error::error_status e) { blink_timer_handler(e, blink_manager, blink_timer); });
+    nrf::smart_button<BUTTON> a([&blink_manager](nrf::button_events evt) { button_event_handler(evt, blink_manager); });
 
     while (true)
     {
-        __SEV();
+        /*__SEV();
         __WFE();
-        __WFE();
+        __WFE();*/
 
         LOG_BACKEND_USB_PROCESS();
         NRF_LOG_PROCESS();

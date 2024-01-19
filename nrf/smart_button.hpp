@@ -11,9 +11,6 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "app_usbd.h"
-#include "app_usbd_serial_num.h"
-
 #define DOUBLE_CLICK_TIMER_TIME_MS 500
 
 namespace nrf
@@ -36,12 +33,17 @@ namespace nrf
 
         void debounced_button_handler(button_events evt)
         {
-            if (evt == on_click_down)
+            m_handler(evt);
+
+            if (evt == on_click_up)
             {
-                NRF_LOG_INFO("Click down");
-                m_handler(on_click_down);
+                NRF_LOG_INFO("Click up");
                 m_click_num++;
                 m_double_click_timer.async_wait(DOUBLE_CLICK_TIMER_TIME_MS, [this](error::error_status e) { double_click_timer_handler(e); });
+            }
+            else
+            {
+                NRF_LOG_INFO("Click down");
             }
         }
 

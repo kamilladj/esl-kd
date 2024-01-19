@@ -1,30 +1,10 @@
 #pragma once
 
-#include "boards.h"
-#include "nrf_gpio.h"
-
 #include "nrf/atomic_32.hpp"
-#include "nrf/systick.hpp"
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "pwm.hpp"
 
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
-#include "nrf_log_default_backends.h"
-#include "nrf_log_backend_usb.h"
-
-#include "app_usbd.h"
-#include "app_usbd_serial_num.h"
-
-#define ID 4231
-#define DIGIT1 ID/1000%10
-#define DIGIT2 ID/100%10
-#define DIGIT3 ID/10%10
-#define DIGIT4 ID%10
-
-enum { blink_on, blink_off };
+enum blink_states { color_change_on, color_change_off };
 
 namespace nrf
 {
@@ -33,100 +13,35 @@ namespace nrf
     public:
 
         blink_event_pwm_manager()
-            : m_cur_index{ 0 }
-            , m_blink_state{ blink_off }
-            , m_all_leds{ 0, 0, 0, 0, 1, 1, 2, 2, 2, 3 }
-            , m_all_leds_size{ DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4 }
-            , m_timer{}
-            , m_delay_us{ 0 }
-            , m_is_led_on{ false }
-            , m_period_us{ 1000 }
-            , m_step_value{ 2 }
-            , m_duty_cycle{ 0 }
-            , m_double_click_num{ 0 }
+            : m_state{ color_change_off }
+            , m_pwm{ [this]() { pwm_handler(); } }
         {}
 
     public:
 
-        void enable(bool cond)
+        void enable(button_events evt)
         {
-            if (cond)
-            {
-                ++m_double_click_num;
-                if (m_double_click_num == 1)
-                {
-                    m_blink_state = blink_on;
-                }
-                else
-                {
-                    m_blink_state = blink_off;
-                    m_double_click_num = 0;
-                }
-            }
+            if (evt == on_click_double)
+                m_pwm.double_click_handler();
+            else if (evt == on_click_down)
+                m_state = color_change_on;
+            else
+                m_state = color_change_off;
         }
 
-        void handle_event()
+        void pwm_handler()
         {
-            if (m_blink_state == blink_on)
-            {
-                if (m_timer.test(m_delay_us))
-                {
-                    if (!m_is_led_on)
-                        change_duty_cycle();
+            m_pwm.update_led1();
 
-                    NRF_LOG_INFO("LED %d inverted", m_all_leds[m_cur_index]);
-                    bsp_board_led_invert(m_all_leds[m_cur_index]);
-                    m_is_led_on = !m_is_led_on;
+            if (m_state == color_change_on)
+                m_pwm.update_hsv();
 
-                    if (m_duty_cycle == 0)
-                    {
-                        bsp_board_led_off(m_all_leds[m_cur_index]);
-                        m_is_led_on = false;
-                        NRF_LOG_INFO("NEXT LED");
-                        ++m_cur_index;
-                        m_cur_index %= m_all_leds_size;
-                    }
-
-                    m_delay_us = m_is_led_on ? get_time_on_us() : get_time_off_us();
-                    m_timer.get();
-                }
-            }
-        }
-
-    public:
-
-        uint32_t get_time_on_us()
-        {
-            return m_period_us * m_duty_cycle / 100;
-        }
-
-        uint32_t get_time_off_us()
-        {
-            return m_period_us - get_time_on_us();
-        }
-
-    public:
-
-        void change_duty_cycle()
-        {
-            m_duty_cycle += m_step_value;
-
-            if (m_duty_cycle == 0 || m_duty_cycle == 100)
-                m_step_value *= -1;
+            m_pwm.update_led2();
         }
 
     private:
 
-        size_t         m_cur_index;
-        atomic_32      m_blink_state;
-        const size_t   m_all_leds[DIGIT1 + DIGIT2 + DIGIT3 + DIGIT4];
-        const size_t   m_all_leds_size;
-        systick        m_timer;
-        uint32_t       m_delay_us;
-        atomic_32      m_is_led_on;
-        const uint32_t m_period_us;
-        int32_t        m_step_value;
-        uint32_t       m_duty_cycle;
-        atomic_32      m_double_click_num;
+        atomic_32 m_state;
+        pwm<0>    m_pwm;
     };
 }
