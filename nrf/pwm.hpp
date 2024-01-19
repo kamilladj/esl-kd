@@ -168,7 +168,7 @@ namespace nrf
     private:
 
         atomic_32                   m_blink_mode;
-        uint16_t                    m_step_value;
+        int16_t                     m_step_value;
         const uint16_t              m_playback_count;
         nrfx_pwm_t                  m_pwm_instance;
         nrf_pwm_values_individual_t m_seq_values;

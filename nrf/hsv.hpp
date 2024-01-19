@@ -93,6 +93,6 @@ namespace nrf
         uint16_t m_hue; //degrees
         uint16_t m_sat;
         uint16_t m_val;
-        uint16_t m_step_value;
+        int16_t  m_step_value;
     };
 }
