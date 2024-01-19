@@ -28,14 +28,14 @@ namespace nrf
     {
     public:
 
-        pwm(utils::static_function<void()> handler)
+        pwm(const unsigned int& device_id, utils::static_function<void()> handler)
             : m_blink_mode{ default_mode }
             , m_step_value{ 0 }
             , m_playback_count{ 1 }
             , m_pwm_instance{}
             , m_seq_values{}
             , m_seq{}
-            , m_hsv{}
+            , m_hsv{ device_id }
             , m_rgb{}
         {
             error::error_status err = init();

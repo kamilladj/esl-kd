@@ -4,16 +4,14 @@
 
 #include <stdint.h>
 
-#define ID 4231
-
 namespace nrf
 {
     class hsv
     {
     public:
 
-        hsv()
-            : m_hue{(ID%100)*255/100}
+        hsv(const unsigned int& device_id)
+            : m_hue{uint16_t((device_id%100)*255/100)}
             , m_sat{255}
             , m_val{255}
             , m_step_value{1}

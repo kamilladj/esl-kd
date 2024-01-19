@@ -21,12 +21,11 @@ void logs_init()
 int main(void)
 {
     bsp_board_init(BSP_INIT_LEDS);
-
     logs_init();
 
-    NRF_LOG_INFO("Starting up the test project with USB logging");
+    const unsigned int device_id = 4321;
 
-    nrf::blink_event_pwm_manager blink_manager;
+    nrf::blink_event_pwm_manager blink_manager(device_id);
 
     nrf::smart_button<BUTTON> a([&blink_manager](nrf::button_events evt) { blink_manager.enable(evt); });
 
