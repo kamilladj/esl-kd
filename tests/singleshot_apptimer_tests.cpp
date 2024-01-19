@@ -6,10 +6,10 @@
 #include <mutex>
 
 #include "nrf_delay.h"
-#include "nrf/singleshot_apptimer.hpp"
-#include "utils/static_function.hpp"
+#include "singleshot_apptimer.hpp"
+#include "static_function.hpp"
 
-#include "simpletest/simpletest.hpp"
+#include "simpletest.hpp"
 
 
 DEFINE_TEST(AsyncTimer_Simple1)

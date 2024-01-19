@@ -4,8 +4,8 @@
 #include "singleton_gpiote.hpp"
 #include "singleton_gpiote_config.hpp"
 
-#include "utils/static_function.hpp"
-#include "utils/static_vector.hpp"
+#include "static_function.hpp"
+#include "static_vector.hpp"
 
 #include "lock_guard.hpp"
 #include "mutex.hpp"

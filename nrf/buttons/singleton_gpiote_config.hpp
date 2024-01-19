@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nrf_drv_gpiote.h"
-#include "error/error_status.hpp"
+#include "error_status.hpp"
 
 namespace nrf
 {

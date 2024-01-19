@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "nrf/atomic_32.hpp"
-#include "simpletest/simpletest.hpp"
+#include "atomic_32.hpp"
+#include "simpletest.hpp"
 
 
 DEFINE_TEST(Atomic32_Empty)

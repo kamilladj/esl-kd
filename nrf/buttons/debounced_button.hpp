@@ -1,7 +1,7 @@
 #pragma once
 
-#include "utils/static_function.hpp"
-#include "error/error_status.hpp"
+#include "static_function.hpp"
+#include "error_status.hpp"
 #include "atomic_32.hpp"
 
 #include "singleshot_apptimer.hpp"

@@ -1,7 +1,7 @@
 //#include <string>
 
-#include "utils/static_vector.hpp"
-#include "simpletest/simpletest.hpp"
+#include "static_vector.hpp"
+#include "simpletest.hpp"
 
 
 DEFINE_TEST(Example_with_int_type)

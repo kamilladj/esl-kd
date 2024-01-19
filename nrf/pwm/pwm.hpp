@@ -1,10 +1,10 @@
 #pragma once
 
-#include "utils/static_function.hpp"
-#include "error/error_status.hpp"
+#include "static_function.hpp"
+#include "error_status.hpp"
 #include "nrfx_pwm.h"
 
-#include "utils/static_vector.hpp"
+#include "static_vector.hpp"
 
 #include "lock_guard.hpp"
 #include "mutex.hpp"

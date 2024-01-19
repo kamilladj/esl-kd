@@ -8,7 +8,7 @@
 #include "nrf_gpio.h"
 #include "boards.h"
 
-#include "simpletest/simpletest.hpp"
+#include "simpletest.hpp"
 
 
 void on_error()

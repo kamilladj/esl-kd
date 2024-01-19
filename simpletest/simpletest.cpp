@@ -1,4 +1,4 @@
-#include "simpletest/simpletest.hpp"
+#include "simpletest.hpp"
 
 // https://github.com/Novodes/SimpleTest-EmbeddedSafety/
 

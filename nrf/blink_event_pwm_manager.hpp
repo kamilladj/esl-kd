@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nrf/atomic_32.hpp"
+#include "atomic_32.hpp"
 
 #include "pwm.hpp"
 
