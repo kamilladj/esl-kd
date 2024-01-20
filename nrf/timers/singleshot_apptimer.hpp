@@ -1,9 +1,9 @@
 #pragma once
 
 #include "app_timer.h"
-#include "utils/static_function.hpp"
-#include "error/error_status.hpp"
-#include "nrf/singleton_apptimer.hpp"
+#include "static_function.hpp"
+#include "error_status.hpp"
+#include "singleton_apptimer.hpp"
 
 namespace nrf
 {

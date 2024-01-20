@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nrfx_systick.h"
-#include "nrf/singleton_systick.hpp"
+#include "singleton_systick.hpp"
 
 #include <stdint.h>
 

@@ -1,10 +1,9 @@
 #pragma once
 
-#include "utils/static_function.hpp"
-#include "error/error_status.hpp"
+#include "static_function.hpp"
+#include "error_status.hpp"
 #include "nrfx_pwm.h"
-
-#include "utils/static_vector.hpp"
+#include "static_vector.hpp"
 
 #include "lock_guard.hpp"
 #include "mutex.hpp"
@@ -19,8 +18,6 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-enum blink_modes { default_mode, hue_mode, saturation_mode, value_mode };
-
 namespace nrf
 {
     template<uint16_t id>
@@ -28,15 +25,13 @@ namespace nrf
     {
     public:
 
-        pwm(utils::static_function<void()> handler)
+        pwm(const unsigned int& device_id, utils::static_function<void()> handler)
             : m_blink_mode{ default_mode }
+            , m_direction{ up }
             , m_step_value{ 0 }
-            , m_playback_count{ 1 }
             , m_pwm_instance{}
             , m_seq_values{}
-            , m_seq{}
-            , m_hsv{}
-            , m_rgb{}
+            , m_hsv{ device_id }
         {
             error::error_status err = init();
 
@@ -63,13 +58,16 @@ namespace nrf
 
         void playback()
         {
-            m_seq.values.p_individual = &m_seq_values;
-            m_seq.length = NRF_PWM_VALUES_LENGTH(m_seq_values);
+            nrf_pwm_sequence_t seq;
+            seq.values.p_individual = &m_seq_values;
+            seq.length = NRF_PWM_VALUES_LENGTH(m_seq_values);
 
-            nrfx_pwm_simple_playback(&m_pwm_instance, &m_seq, m_playback_count, NRFX_PWM_FLAG_LOOP);
+            const uint16_t playback_count = 1;
+
+            nrfx_pwm_simple_playback(&m_pwm_instance, &seq, playback_count, NRFX_PWM_FLAG_LOOP);
         }
 
-    public:
+    private:
 
         void change_mode()
         {
@@ -89,19 +87,27 @@ namespace nrf
 
         void update_led1()
         {
-            m_seq_values.channel_0 += m_step_value;
-
-            if (m_seq_values.channel_0 <= 0 || m_seq_values.channel_0 >= 255)
-                m_step_value *= -1;
+            if (m_direction == up)
+            {
+                m_seq_values.channel_0 += m_step_value;
+                if (m_seq_values.channel_0 >= 255)
+                    m_direction = down;
+            }
+            else
+            {
+                m_seq_values.channel_0 -= m_step_value;
+                if (m_seq_values.channel_0 <= 0)
+                    m_direction = up;
+            }
         }
 
 
         void update_led2()
         {
-            m_hsv.hsv2rgb(m_rgb);
-            m_seq_values.channel_1 = m_rgb.get_red();
-            m_seq_values.channel_2 = m_rgb.get_green();
-            m_seq_values.channel_3 = m_rgb.get_blue();
+            rgb color(m_hsv);
+            m_seq_values.channel_1 = color.red;
+            m_seq_values.channel_2 = color.green;
+            m_seq_values.channel_3 = color.blue;
         }
 
 
@@ -126,6 +132,7 @@ namespace nrf
             change_mode();
 
             m_seq_values.channel_0 = 0;
+            m_direction = up;
 
             if (m_blink_mode == hue_mode)
             {
@@ -163,18 +170,17 @@ namespace nrf
 
     private:
 
+        enum { default_mode, hue_mode, saturation_mode, value_mode };
         typedef static_vector<utils::static_function<void()>, 5> handlers_vector;
 
     private:
 
         atomic_32                   m_blink_mode;
+        atomic_32                   m_direction;
         uint16_t                    m_step_value;
-        const uint16_t              m_playback_count;
         nrfx_pwm_t                  m_pwm_instance;
         nrf_pwm_values_individual_t m_seq_values;
-        nrf_pwm_sequence_t          m_seq;
         hsv                         m_hsv;
-        rgb                         m_rgb;
         static mutex                m_mtx;
         static handlers_vector      m_handlers;
     };

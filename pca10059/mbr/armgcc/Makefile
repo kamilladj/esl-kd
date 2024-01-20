@@ -65,6 +65,14 @@ SRC_FILES += \
 INC_FOLDERS += \
 	$(PROJ_DIR) \
 	../config \
+	$(PROJ_DIR)/nrf/ \
+	$(PROJ_DIR)/nrf/buttons \
+	$(PROJ_DIR)/nrf/mt \
+	$(PROJ_DIR)/nrf/pwm \
+	$(PROJ_DIR)/nrf/timers \
+	$(PROJ_DIR)/utils \
+	$(PROJ_DIR)/error \
+	$(PROJ_DIR)/simpletest \
 	$(SDK_ROOT)/integration/nrfx \
 	$(SDK_ROOT)/integration/nrfx/legacy \
 	$(SDK_ROOT)/modules/nrfx/drivers/include \

@@ -5,8 +5,8 @@
 #include <utility>
 #include <mutex>
 
-#include "nrf/mutex.hpp"
-#include "simpletest/simpletest.hpp"
+#include "mutex.hpp"
+#include "simpletest.hpp"
 
 
 DEFINE_TEST(Mutex_Simple)

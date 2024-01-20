@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sdk_errors.h"
-#include "error/generic_error_status.hpp"
+#include "generic_error_status.hpp"
 
 namespace error
 {
