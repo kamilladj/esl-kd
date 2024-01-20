@@ -1,49 +1,63 @@
 #pragma once
 
+#include "hsv.hpp"
+
 #include <stdint.h>
 
 namespace nrf
 {
-    class rgb
+    struct rgb
     {
-    public:
-
-        rgb()
-            : m_red{0}
-            , m_green{0}
-            , m_blue{0}
+        rgb(uint16_t r, uint16_t g, uint16_t b)
+            : red{r}
+            , green{g}
+            , blue{b}
         {}
 
-    public:
-
-        void update_values(uint16_t r, uint16_t g, uint16_t b)
+        rgb(hsv hsv)
         {
-            m_red = r;
-            m_green = g;
-            m_blue = b;
+            *this = create_rgb(hsv.get_hue(), hsv.get_sat(), hsv.get_val());
         }
 
-    public:
-
-        uint16_t get_red()
+        static rgb create_rgb(uint16_t hue, uint16_t sat, uint16_t val)
         {
-            return m_red;
+            if (sat == 0)
+                return rgb(val, val, val);
+            else
+                return create_rgb_from_region(hue, sat, val);
         }
 
-        uint16_t get_green()
+        // from https://stackoverflow.com/a/14733008
+        static rgb create_rgb_from_region(uint16_t hue, uint16_t sat, uint16_t val)
         {
-            return m_green;
+            uint16_t region, remainder, p, q, t;
+
+            region = hue / 43;
+            remainder = (hue - (region * 43)) * 6;
+
+            p = (val * (255 - sat)) >> 8;
+            q = (val * (255 - ((sat * remainder) >> 8))) >> 8;
+            t = (val * (255 - ((sat * (255 - remainder)) >> 8))) >> 8;
+
+            switch (region)
+            {
+            case 0:
+                return rgb(val, t, p);
+            case 1:
+                return rgb(q, val, p);
+            case 2:
+                return rgb(p, val, t);
+            case 3:
+                return rgb(p, q, val);
+            case 4:
+                return rgb(t, p, val);
+            default:
+                return rgb(val, p, q);
+            }
         }
 
-        uint16_t get_blue()
-        {
-            return m_blue;
-        }
-
-    private:
-
-        uint16_t m_red;
-        uint16_t m_green;
-        uint16_t m_blue;
+        uint16_t red;
+        uint16_t green;
+        uint16_t blue;
     };
 }

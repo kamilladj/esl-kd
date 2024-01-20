@@ -1,11 +1,11 @@
 #pragma once
 
-#include "rgb.hpp"
-
 #include <stdint.h>
 
 namespace nrf
 {
+    enum directions { up, down };
+
     class hsv
     {
     public:
@@ -21,76 +21,80 @@ namespace nrf
 
         void update_hue()
         {
-            m_hue += m_step_value;
+            static directions dir = up;
 
-            if (m_hue <= 0 || m_hue >= 255)
-                m_step_value *= -1;
+            if (dir == up)
+            {
+                m_hue += m_step_value;
+                if (m_hue >= 255)
+                    dir = down;
+            }
+            else
+            {
+                m_hue -= m_step_value;
+                if (m_hue <= 0)
+                    dir = up;
+            }
         }
 
         void update_saturation()
         {
-            m_sat += m_step_value;
+            static directions dir = up;
 
-            if (m_sat <= 0 || m_sat >= 255)
-                m_step_value *= -1;
+            if (dir == up)
+            {
+                m_sat += m_step_value;
+                if (m_sat >= 255)
+                    dir = down;
+            }
+            else
+            {
+                m_sat -= m_step_value;
+                if (m_sat <= 0)
+                    dir = up;
+            }
         }
 
         void update_value()
         {
-            m_val += m_step_value;
+            static directions dir = up;
 
-            if (m_val <= 0 || m_val >= 255)
-                m_step_value *= -1;
+            if (dir == up)
+            {
+                m_val += m_step_value;
+                if (m_val >= 255)
+                    dir = down;
+            }
+            else
+            {
+                m_val -= m_step_value;
+                if (m_val <= 0)
+                    dir = up;
+            }
         }
 
     public:
 
-        void hsv2rgb(rgb& color)
+        uint16_t get_hue()
         {
-            uint16_t region, remainder, p, q, t;
+            return m_hue;
+        }
 
-            if (m_sat == 0)
-            {
-                color.update_values(m_val, m_val, m_val);
+        uint16_t get_sat()
+        {
+            return m_sat;
+        }
 
-                return;
-            }
-
-            region = m_hue / 43;
-            remainder = (m_hue - (region * 43)) * 6;
-
-            p = (m_val * (255 - m_sat)) >> 8;
-            q = (m_val * (255 - ((m_sat * remainder) >> 8))) >> 8;
-            t = (m_val * (255 - ((m_sat * (255 - remainder)) >> 8))) >> 8;
-
-            switch (region)
-            {
-            case 0:
-                color.update_values(m_val, t, p);
-                break;
-            case 1:
-                color.update_values(q, m_val, p);
-                break;
-            case 2:
-                color.update_values(p, m_val, t);
-                break;
-            case 3:
-                color.update_values(p, q, m_val);
-                break;
-            case 4:
-                color.update_values(t, p, m_val);
-                break;
-            default:
-                color.update_values(m_val, p, q);
-                break;
-            }
+        uint16_t get_val()
+        {
+            return m_val;
         }
 
     private:
 
-        uint16_t m_hue; //degrees
+        uint16_t m_hue; //in degrees
         uint16_t m_sat;
         uint16_t m_val;
-        int16_t  m_step_value;
+        uint16_t m_step_value;
     };
 }
