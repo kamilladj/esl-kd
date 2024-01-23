@@ -25,7 +25,7 @@ namespace nrf
     {
     public:
 
-        pwm(const unsigned int& device_id, utils::static_function<void()> handler)
+        pwm(unsigned int device_id, utils::static_function<void()> handler)
             : m_blink_mode{ default_mode }
             , m_direction{ up }
             , m_step_value{ 0 }

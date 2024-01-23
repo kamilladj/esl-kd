@@ -10,7 +10,7 @@ namespace nrf
     {
     public:
 
-        hsv(const unsigned int& device_id)
+        hsv(unsigned int device_id)
             : m_hue{uint16_t((device_id%100)*255/100)}
             , m_sat{255}
             , m_val{255}
