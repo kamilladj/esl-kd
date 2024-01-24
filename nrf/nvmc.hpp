@@ -14,7 +14,7 @@ namespace nrf
     public:
 
         nvmc()
-            : m_address{ 0x000DD000 }
+            : m_start_address{ 0x000DD000 }
         {}
 
     private:
@@ -74,6 +74,6 @@ namespace nrf
 
     private:
 
-        const uint32_t m_address;
+        const uint32_t m_start_address;
     };
 }
