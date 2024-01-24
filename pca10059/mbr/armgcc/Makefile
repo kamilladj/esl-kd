@@ -103,6 +103,7 @@ INC_FOLDERS += \
 	$(SDK_ROOT)/components/libraries/usbd \
 	$(SDK_ROOT)/components/libraries/usbd/class/cdc \
 	$(SDK_ROOT)/components/libraries/usbd/class/cdc/acm \
+	$(SDK_ROOT)/components/libraries/bootloader/dfu \
 	$(SDK_ROOT)/external/fprintf \
 	$(SDK_ROOT)/external/utf_converter
 
