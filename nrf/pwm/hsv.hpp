@@ -17,6 +17,13 @@ namespace nrf
             , m_step_value{1}
         {}
 
+        hsv(uint16_t h, uint16_t s, uint16_t v)
+            : m_hue{h}
+            , m_sat{s}
+            , m_val{v}
+            , m_step_value{1}
+        {}
+
     public:
 
         void update_hue()
