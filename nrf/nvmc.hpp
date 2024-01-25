@@ -1,11 +1,12 @@
 #pragma once
 
 #include "nrfx_nvmc.h"
+#include "app_util.h"
+#include "nrf_dfu_types.h"
 
 #include "error_status.hpp"
 
 #include <stdint.h>
-#include <stdbool.h>
 
 namespace nrf
 {
@@ -14,66 +15,62 @@ namespace nrf
     public:
 
         nvmc()
-            : m_start_address{ 0x000DD000 }
+            : m_start_address{ BOOTLOADER_ADDRESS - NRF_DFU_APP_DATA_AREA_SIZE }
+            , m_num_words{ 3 }
         {}
-
-    private:
-
-        error::error_status page_erase()
-        {
-            return nrfx_nvmc_page_erase(m_address);
-        }
-
-        bool word_writable_check(uint32_t val)
-        {
-            return nrfx_nvmc_word_writable_check(m_address, val);
-        }
-
-        void word_write(uint32_t val)
-        {
-            nrfx_nvmc_word_write(m_address, val);
-        }
-
-        bool write_done_check()
-        {
-            return nrfx_nvmc_write_done_check();
-        }
 
     public:
 
         bool is_empty()
         {
-            uint32_t* ptr = (uint32_t*)m_address;
+            uint32_t* p_address = (uint32_t*)m_start_address;
 
-            return *ptr == 0xFFFFFFFF;
+            bool empty = true;
+
+            for (uint32_t i = 0; i < m_num_words; i++)
+            {
+                if (*(p_address + i) != 0xFFFFFFFF)
+                {
+                    empty = false;
+                    break;
+                }
+            }
+
+            return empty;
         }
 
     public:
 
-        void save_data(uint32_t val)
+        void write_data(uint32_t const* src)
         {
             error::error_status err;
-            if (!word_writable_check(val))
-                err = page_erase();
+
+            for (uint32_t i = 0; i < m_num_words; i++)
+            {
+                if (!nrfx_nvmc_word_writable_check(m_start_address + i, *(src + i)))
+                {
+                    err = nrfx_nvmc_page_erase(m_start_address);
+                    break;
+                }
+            }
 
             if (!err)
-                word_write(val);
+                nrfx_nvmc_words_write(m_start_address, src, m_num_words);
 
-            while (!write_done_check());
+            while (!nrfx_nvmc_write_done_check());
         }
 
-        uint32_t get_data()
+        void read_data(uint32_t* dest)
         {
-            uint32_t* ptr = (uint32_t*)m_address;
+            uint32_t* p_address = (uint32_t*)m_start_address;
 
-            if (is_empty())
-                return 0;
-            else
-                return *ptr;
+            for (uint32_t i = 0; i < m_num_words; i++)
+                *(dest + i) = *(p_address + i);
         }
 
     private:
 
         const uint32_t m_start_address;
+        uint32_t m_num_words;
     };
 }
