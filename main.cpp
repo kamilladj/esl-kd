@@ -23,7 +23,7 @@ int main(void)
     bsp_board_init(BSP_INIT_LEDS);
     logs_init();
 
-    const unsigned int device_id = 4321;
+    const unsigned int device_id = 7207;
 
     nrf::blink_event_pwm_manager blink_manager(device_id);
 
