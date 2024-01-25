@@ -89,15 +89,27 @@ namespace nrf
         {
             if (m_direction == up)
             {
-                m_seq_values.channel_0 += m_step_value;
-                if (m_seq_values.channel_0 >= 255)
+                if (m_seq_values.channel_0 + m_step_value <= 255)
+                {
+                    m_seq_values.channel_0 += m_step_value;
+                }
+                else
+                {
+                    m_seq_values.channel_0 = 255;
                     m_direction = down;
+                }
             }
             else
             {
-                m_seq_values.channel_0 -= m_step_value;
-                if (m_seq_values.channel_0 <= 0)
+                if (m_seq_values.channel_0 - m_step_value >= 0)
+                {
+                    m_seq_values.channel_0 -= m_step_value;
+                }
+                else
+                {
+                    m_seq_values.channel_0 = 0;
                     m_direction = up;
+                }
             }
         }
 
