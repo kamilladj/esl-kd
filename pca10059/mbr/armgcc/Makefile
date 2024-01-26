@@ -30,6 +30,7 @@ SRC_FILES += \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_usbd.c \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power.c \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pwm.c \
+	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_nvmc.c \
 	$(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.s \
 	$(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
 	$(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
@@ -102,6 +103,7 @@ INC_FOLDERS += \
 	$(SDK_ROOT)/components/libraries/usbd \
 	$(SDK_ROOT)/components/libraries/usbd/class/cdc \
 	$(SDK_ROOT)/components/libraries/usbd/class/cdc/acm \
+	$(SDK_ROOT)/components/libraries/bootloader/dfu \
 	$(SDK_ROOT)/external/fprintf \
 	$(SDK_ROOT)/external/utf_converter
 

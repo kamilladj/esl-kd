@@ -12,7 +12,7 @@ namespace nrf
     {
     public:
 
-        blink_event_pwm_manager(const unsigned int& device_id)
+        blink_event_pwm_manager(unsigned int device_id)
             : m_state{ color_change_off }
             , m_pwm{ device_id, [this]() { pwm_handler(); } }
         {}

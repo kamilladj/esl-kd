@@ -10,10 +10,17 @@ namespace nrf
     {
     public:
 
-        hsv(const unsigned int& device_id)
+        hsv(unsigned int device_id)
             : m_hue{uint16_t((device_id%100)*255/100)}
             , m_sat{255}
             , m_val{255}
+            , m_step_value{1}
+        {}
+
+        hsv(uint16_t h, uint16_t s, uint16_t v)
+            : m_hue{h}
+            , m_sat{s}
+            , m_val{v}
             , m_step_value{1}
         {}
 
@@ -21,20 +28,9 @@ namespace nrf
 
         void update_hue()
         {
-            static directions dir = up;
-
-            if (dir == up)
-            {
-                m_hue += m_step_value;
-                if (m_hue >= 255)
-                    dir = down;
-            }
-            else
-            {
-                m_hue -= m_step_value;
-                if (m_hue <= 0)
-                    dir = up;
-            }
+            m_hue += m_step_value;
+            if (m_hue >= 255)
+                m_hue = 0;
         }
 
         void update_saturation()
@@ -50,7 +46,7 @@ namespace nrf
             else
             {
                 m_sat -= m_step_value;
-                if (m_sat <= 0)
+                if (m_sat == 0)
                     dir = up;
             }
         }
@@ -68,7 +64,7 @@ namespace nrf
             else
             {
                 m_val -= m_step_value;
-                if (m_val <= 0)
+                if (m_val == 0)
                     dir = up;
             }
         }

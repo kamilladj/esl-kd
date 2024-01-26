@@ -12,6 +12,7 @@
 
 #include "hsv.hpp"
 #include "rgb.hpp"
+#include "nvmc.hpp"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -25,14 +26,18 @@ namespace nrf
     {
     public:
 
-        pwm(const unsigned int& device_id, utils::static_function<void()> handler)
+        pwm(unsigned int device_id, utils::static_function<void()> handler)
             : m_blink_mode{ default_mode }
             , m_direction{ up }
             , m_step_value{ 0 }
             , m_pwm_instance{}
             , m_seq_values{}
             , m_hsv{ device_id }
+            , m_nvmc{}
         {
+            if (!m_nvmc.is_empty())
+                m_hsv = get_hsv_from_nvmc();
+
             error::error_status err = init();
 
             {
@@ -42,6 +47,16 @@ namespace nrf
 
             if (!err)
                 playback();
+        }
+
+    private:
+
+        hsv get_hsv_from_nvmc()
+        {
+            uint32_t arr[] = { m_hsv.get_hue(), m_hsv.get_sat(), m_hsv.get_val() };
+            m_nvmc.read_data(arr);
+
+            return hsv(arr[0], arr[1], arr[2]);
         }
 
     private:
@@ -89,15 +104,27 @@ namespace nrf
         {
             if (m_direction == up)
             {
-                m_seq_values.channel_0 += m_step_value;
-                if (m_seq_values.channel_0 >= 255)
+                if (m_seq_values.channel_0 + m_step_value <= 255)
+                {
+                    m_seq_values.channel_0 += m_step_value;
+                }
+                else
+                {
+                    m_seq_values.channel_0 = 255;
                     m_direction = down;
+                }
             }
             else
             {
-                m_seq_values.channel_0 -= m_step_value;
-                if (m_seq_values.channel_0 <= 0)
+                if (m_seq_values.channel_0 - m_step_value >= 0)
+                {
+                    m_seq_values.channel_0 -= m_step_value;
+                }
+                else
+                {
+                    m_seq_values.channel_0 = 0;
                     m_direction = up;
+                }
             }
         }
 
@@ -150,6 +177,8 @@ namespace nrf
             else
             {
                 m_step_value = 0;
+                uint32_t arr[] = { m_hsv.get_hue(), m_hsv.get_sat(), m_hsv.get_val() };
+                m_nvmc.write_data(arr);
             }
         }
 
@@ -181,6 +210,7 @@ namespace nrf
         nrfx_pwm_t                  m_pwm_instance;
         nrf_pwm_values_individual_t m_seq_values;
         hsv                         m_hsv;
+        nvmc                        m_nvmc;
         static mutex                m_mtx;
         static handlers_vector      m_handlers;
     };
