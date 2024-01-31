@@ -71,7 +71,7 @@ public:
 	template<typename V>
 	void push_back(const V& v)
 	{
-        ASSERT(m_size != size);
+        NRFX_ASSERT(m_size != size);
 
 		new(m_storage[m_size]) T(v);
 		++m_size;
@@ -79,7 +79,7 @@ public:
 
 	void pop_back()
 	{
-        ASSERT(m_size != 0);
+        NRFX_ASSERT(m_size != 0);
 
 		((T*)m_storage[m_size - 1])->~T();
 		--m_size;
