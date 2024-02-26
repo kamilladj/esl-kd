@@ -1,0 +1,146 @@
+#pragma once
+
+#include "nrf_fstorage.h"
+#include "nrf_fstorage_nvmc.h"
+
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_backend_usb.h"
+
+#include "nrf_assert.h"
+#include "nrf_dfu_types.h"
+
+#include "error_status.hpp"
+#include "static_vector.hpp"
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+namespace nrf
+{
+    template<size_t header_size, size_t record_size>
+    class page
+    {
+    public:
+
+        page(uint32_t start_addr = 0, uint32_t end_addr = 0)
+            : m_start_addr{start_addr}
+            , m_end_addr{end_addr}
+            , m_cur_pos{start_addr}
+        {
+            fstorage_init();
+        }
+
+    private:
+
+        bool is_address_valid(uint32_t addr)
+        {
+            if (addr >= m_start_addr && addr < m_end_addr)
+                return true;
+            else
+                return false;
+        }
+
+    private:
+
+        static void fstorage_evt_handler(nrf_fstorage_evt_t* p_evt)
+        {
+            error::error_status e = p_evt->result;
+
+            if (!e)
+            {
+                if (p_evt->id == NRF_FSTORAGE_EVT_WRITE_RESULT)
+                {
+                    NRF_LOG_INFO("--> Event received: wrote %d bytes at address 0x%x.", p_evt->len, p_evt->addr);
+                }
+                else if (p_evt->id == NRF_FSTORAGE_EVT_ERASE_RESULT)
+                {
+                    NRF_LOG_INFO("--> Event received: erased %d page from address 0x%x.", p_evt->len, p_evt->addr);
+                }
+            }
+        }
+
+        error::error_status fstorage_init()
+        {
+            m_fstorage.evt_handler = fstorage_evt_handler;
+            m_fstorage.start_addr = m_start_addr;
+            m_fstorage.end_addr = m_end_addr; //?
+
+            return nrf_fstorage_init(&m_fstorage, &nrf_fstorage_nvmc, NULL);
+        }
+
+        void wait_for_flash_ready()
+        {
+            while (nrf_fstorage_is_busy(&m_fstorage))
+                __WFE();
+        }
+
+    public:
+
+        /*void read_page_header(static_vector<uint8_t, header_size>& buff)
+        {
+            error::error_status e = nrf_fstorage_read(&m_fstorage, m_start_addr, &buff[0], header_size);
+
+            if (!e)
+                wait_for_flash_ready();
+        }
+
+        void write_page_header(const static_vector<uint8_t, header_size>& buff)
+        {
+            error::error_status e = nrf_fstorage_write(&m_fstorage, m_start_addr, &buff[0], header_size, NULL);
+
+            if (!e)
+                wait_for_flash_ready();
+        }*/
+
+    public:
+
+        void read_last_record(static_vector<uint8_t, record_size>& buff)
+        {
+            error::error_status e = nrf_fstorage_read(&m_fstorage, m_cur_pos, &buff[0], record_size);
+
+            if (!e)
+                wait_for_flash_ready();
+        }
+
+        void write_new_record(const static_vector<uint8_t, record_size>& buff)
+        {
+            page_erase();
+
+            //NRFX_ASSERT(is_address_valid());
+
+            error::error_status e = nrf_fstorage_write(&m_fstorage, m_cur_pos, &buff[0], record_size, NULL);
+
+            //m_cur_pos = m_start_addr + value_size * record_size;
+
+            if (!e)
+                wait_for_flash_ready();
+        }
+
+    public:
+
+        void page_erase()
+        {
+            m_cur_pos = m_start_addr;
+
+            NRF_LOG_INFO("page_erase(%x)", m_cur_pos);
+
+            error::error_status e = nrf_fstorage_erase(&m_fstorage, m_cur_pos, 1, NULL);
+
+            if (!e)
+                wait_for_flash_ready();
+        }
+
+    private:
+
+        uint32_t              m_start_addr;
+        uint32_t              m_end_addr;
+        uint32_t              m_cur_pos;
+        static const uint32_t value_size = 4;
+        nrf_fstorage_t        m_fstorage;
+    };
+
+    template<size_t header_size, size_t record_size>
+    const uint32_t page<header_size, record_size>::value_size;
+}
