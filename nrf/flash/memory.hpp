@@ -19,9 +19,9 @@ namespace nrf
 
         memory()
             : m_start_addr{ BOOTLOADER_ADDRESS - NRF_DFU_APP_DATA_AREA_SIZE }
-            , m_end_addr{ BOOTLOADER_ADDRESS }
-            , m_pages{ page<page_header_size, size>(m_start_addr, m_start_addr + CODE_PAGE_SIZE)
-                     , page<page_header_size, size>(m_start_addr + CODE_PAGE_SIZE, m_start_addr + 2 * CODE_PAGE_SIZE)
+            , m_end_addr{ BOOTLOADER_ADDRESS - 1}
+            , m_pages{ page<page_header_size, size>(m_start_addr, m_start_addr + CODE_PAGE_SIZE - 1)
+                     , page<page_header_size, size>(m_start_addr + CODE_PAGE_SIZE, m_start_addr + 2 * CODE_PAGE_SIZE - 1)
                      , page<page_header_size, size>(m_start_addr + 2 * CODE_PAGE_SIZE, m_end_addr) }
             , m_cur_page{ 0 }
         {
