@@ -30,17 +30,46 @@ namespace nrf
             , m_cur_pos{start_addr}
         {
             fstorage_init();
+            page_erase();
+            find_cur_pos();
         }
 
     private:
 
-        bool is_address_valid(uint32_t addr)
+        void find_cur_pos()
         {
-            if (addr >= m_start_addr && addr < m_end_addr)
+            uint32_t last_record_addr = m_start_addr + record_size * 5; //6-1
+
+            for (m_cur_pos = last_record_addr; m_cur_pos >= m_start_addr; m_cur_pos -= record_size)
+            {
+                if (byte_read() != 0xFF)
+                    return;
+            }
+        }
+
+        void update_cur_pos()
+        {
+            m_cur_pos += record_size;
+        }
+
+        bool is_address_valid()
+        {
+            if (m_cur_pos >= m_start_addr && m_cur_pos <= m_end_addr)
                 return true;
             else
                 return false;
         }
+
+        /*bool is_record_writable(static_vector<uint8_t, record_size>& buff)
+        {
+            for (size_t i = 0; i < record_size; i++)
+            {
+                if (buff[i] == 0xFF)
+                    return false;
+            }
+
+            return true;
+        }*/
 
     private:
 
@@ -65,7 +94,7 @@ namespace nrf
         {
             m_fstorage.evt_handler = fstorage_evt_handler;
             m_fstorage.start_addr = m_start_addr;
-            m_fstorage.end_addr = m_end_addr; //?
+            m_fstorage.end_addr = m_end_addr;
 
             return nrf_fstorage_init(&m_fstorage, &nrf_fstorage_nvmc, NULL);
         }
@@ -76,10 +105,40 @@ namespace nrf
                 __WFE();
         }
 
+    private:
+
+        uint8_t byte_read()
+        {
+            uint8_t res;
+
+            NRFX_ASSERT(is_address_valid());
+
+            error::error_status e = nrf_fstorage_read(&m_fstorage, m_cur_pos, &res, sizeof(res));
+
+            if (!e)
+                wait_for_flash_ready();
+
+            return res;
+        }
+
+    public:
+
+        /*bool is_page_empty()
+        {
+            return true;
+        }
+
+        bool is_page_full()
+        {
+            return true;
+        }*/
+
     public:
 
         /*void read_page_header(static_vector<uint8_t, header_size>& buff)
         {
+            NRFX_ASSERT(is_address_valid());
+
             error::error_status e = nrf_fstorage_read(&m_fstorage, m_start_addr, &buff[0], header_size);
 
             if (!e)
@@ -88,6 +147,8 @@ namespace nrf
 
         void write_page_header(const static_vector<uint8_t, header_size>& buff)
         {
+            NRFX_ASSERT(is_address_valid());
+
             error::error_status e = nrf_fstorage_write(&m_fstorage, m_start_addr, &buff[0], header_size, NULL);
 
             if (!e)
@@ -98,6 +159,8 @@ namespace nrf
 
         void read_last_record(static_vector<uint8_t, record_size>& buff)
         {
+            NRFX_ASSERT(is_address_valid());
+
             error::error_status e = nrf_fstorage_read(&m_fstorage, m_cur_pos, &buff[0], record_size);
 
             if (!e)
@@ -106,16 +169,16 @@ namespace nrf
 
         void write_new_record(const static_vector<uint8_t, record_size>& buff)
         {
-            page_erase();
+            //page_erase();
 
-            //NRFX_ASSERT(is_address_valid());
+            NRFX_ASSERT(is_address_valid());
 
-            error::error_status e = nrf_fstorage_write(&m_fstorage, m_cur_pos, &buff[0], record_size, NULL);
-
-            //m_cur_pos = m_start_addr + value_size * record_size;
+            error::error_status e = nrf_fstorage_write(&m_fstorage, m_cur_pos + record_size, &buff[0], record_size, NULL);
 
             if (!e)
                 wait_for_flash_ready();
+
+            update_cur_pos();
         }
 
     public:
@@ -137,10 +200,6 @@ namespace nrf
         uint32_t              m_start_addr;
         uint32_t              m_end_addr;
         uint32_t              m_cur_pos;
-        static const uint32_t value_size = 4;
         nrf_fstorage_t        m_fstorage;
     };
-
-    template<size_t header_size, size_t record_size>
-    const uint32_t page<header_size, record_size>::value_size;
 }
