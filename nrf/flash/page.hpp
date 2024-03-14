@@ -56,17 +56,6 @@ namespace nrf
                 return false;
         }
 
-        /*bool is_record_writable(static_vector<uint8_t, record_size>& buff)
-        {
-            for (size_t i = 0; i < record_size; i++)
-            {
-                if (buff[i] == 0xFF)
-                    return false;
-            }
-
-            return true;
-        }*/
-
     private:
 
         static void fstorage_evt_handler(nrf_fstorage_evt_t* p_evt)

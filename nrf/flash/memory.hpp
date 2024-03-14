@@ -74,6 +74,19 @@ namespace nrf
         //    cnt++;
         //}
 
+    private:
+
+        bool is_record_writable(const static_vector<uint8_t, size>& buff)
+        {
+            for (size_t i = 0; i < size; i++)
+            {
+                if (buff[i] == 0xFF)
+                    return false;
+            }
+
+            return true;
+        }
+
     public:
 
         void read_from_page(static_vector<uint8_t, size>& buff)
@@ -86,6 +99,9 @@ namespace nrf
 
         void write_to_page(const static_vector<uint8_t, size>& buff)
         {
+            if (!(is_record_writable(buff)))
+                return;
+
             /*if (m_pages[m_cur_page].is_page_full())
             {
                 m_cur_page++;
