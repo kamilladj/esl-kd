@@ -20,12 +20,12 @@ namespace nrf
         memory()
             : m_start_addr{ BOOTLOADER_ADDRESS - NRF_DFU_APP_DATA_AREA_SIZE }
             , m_end_addr{ BOOTLOADER_ADDRESS - 1}
-            , m_pages{ page<page_header_size, size>(m_start_addr, m_start_addr + CODE_PAGE_SIZE - 1)
-                     , page<page_header_size, size>(m_start_addr + CODE_PAGE_SIZE, m_start_addr + 2 * CODE_PAGE_SIZE - 1)
-                     , page<page_header_size, size>(m_start_addr + 2 * CODE_PAGE_SIZE, m_end_addr) }
+            , m_pages{ page<m_page_header_size, size>(m_start_addr, m_start_addr + CODE_PAGE_SIZE - 1)
+                     , page<m_page_header_size, size>(m_start_addr + CODE_PAGE_SIZE, m_start_addr + 2 * CODE_PAGE_SIZE - 1)
+                     , page<m_page_header_size, size>(m_start_addr + 2 * CODE_PAGE_SIZE, m_end_addr) }
             , m_cur_page{ 0 }
         {
-            NRFX_ASSERT(num_of_pages >= 2);
+            NRFX_ASSERT(m_num_of_pages >= 2);
             //write_page_headers();
         }
 
@@ -35,20 +35,19 @@ namespace nrf
         //{
         //    read_page_header(i);
 
-        //    for (size_t i = 0; i < num_of_pages; i++)
+        //    for (size_t i = 0; i < m_num_of_pages; i++)
         //        read_page_headers(i, 0);
         //}
 
         //void write_page_headers()
         //{
-        //    for (size_t i = 0; i < num_of_pages; i++)
+        //    for (size_t i = 0; i < m_num_of_pages; i++)
         //        write_page_header(i, 0);
         //}
 
-
         //void write_page_header(size_t i, uint8_t idx)
         //{
-        //    static_vector<uint8_t, page_header_size> vec;
+        //    static_vector<uint8_t, m_page_header_size> vec;
 
         //    vec.push_back(0);
         //    vec.push_back(255);
@@ -90,7 +89,7 @@ namespace nrf
             /*if (m_pages[m_cur_page].is_page_full())
             {
                 m_cur_page++;
-                m_cur_page %= num_of_pages;
+                m_cur_page %= m_num_of_pages;
                 m_pages[m_cur_page].page_erase();
                 rewrite_page_header();
             }*/
@@ -100,17 +99,17 @@ namespace nrf
         
     private:
 
-        uint32_t                      m_start_addr;
-        uint32_t                      m_end_addr;
-        static const uint32_t         page_header_size = 10;
-        static const uint32_t         num_of_pages = 3;
-        page<page_header_size, size>  m_pages[num_of_pages];
-        uint8_t                       m_cur_page;
+        uint32_t                       m_start_addr;
+        uint32_t                       m_end_addr;
+        static const uint32_t          m_page_header_size = 10;
+        static const uint32_t          m_num_of_pages = 3;
+        page<m_page_header_size, size> m_pages[m_num_of_pages];
+        uint8_t                        m_cur_page;
     };
 
     template<size_t size>
-    const uint32_t memory<size>::page_header_size;
+    const uint32_t memory<size>::m_page_header_size;
 
     template<size_t size>
-    const uint32_t memory<size>::num_of_pages;
+    const uint32_t memory<size>::m_num_of_pages;
 }
