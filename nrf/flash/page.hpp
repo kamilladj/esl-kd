@@ -28,9 +28,10 @@ namespace nrf
             : m_start_addr{start_addr}
             , m_end_addr{end_addr}
             , m_cur_pos{start_addr}
+            , m_max_num_of_records{CODE_PAGE_SIZE/record_size}
         {
             fstorage_init();
-            page_erase();
+            //page_erase();
             find_cur_pos();
         }
 
@@ -38,7 +39,7 @@ namespace nrf
 
         void find_cur_pos()
         {
-            uint32_t last_record_addr = m_start_addr + record_size * 5; //6-1
+            uint32_t last_record_addr = m_start_addr + record_size * (m_max_num_of_records - 1); //256-1
 
             for (m_cur_pos = last_record_addr; m_cur_pos >= m_start_addr; m_cur_pos -= record_size)
             {
