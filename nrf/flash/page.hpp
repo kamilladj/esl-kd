@@ -42,7 +42,7 @@ namespace nrf
 
             for (m_cur_pos = last_record_addr; m_cur_pos >= m_start_addr; m_cur_pos -= record_size)
             {
-                if (byte_read() != 0xFF)
+                if (read_byte() != 0xFF)
                     return;
             }
         }
@@ -89,9 +89,9 @@ namespace nrf
                 __WFE();
         }
 
-    private:
+    public:
 
-        uint8_t byte_read()
+        uint8_t read_byte()
         {
             uint8_t res;
 
