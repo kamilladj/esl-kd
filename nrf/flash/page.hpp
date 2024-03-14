@@ -31,7 +31,6 @@ namespace nrf
             , m_max_num_of_records{CODE_PAGE_SIZE/record_size}
         {
             fstorage_init();
-            //page_erase();
             find_cur_pos();
         }
 
@@ -108,15 +107,15 @@ namespace nrf
 
     public:
 
-        /*bool is_page_empty()
+        bool is_page_empty()
         {
-            return true;
+            return m_cur_pos == m_start_addr;
         }
 
         bool is_page_full()
         {
-            return true;
-        }*/
+            return m_end_addr - m_cur_pos >= record_size - 1;
+        }
 
     public:
 
@@ -153,9 +152,7 @@ namespace nrf
         }
 
         void write_new_record(const static_vector<uint8_t, record_size>& buff)
-        {
-            //page_erase(); 
-                                                                                                                                                                       
+        {                                                                                                                                                            
             NRFX_ASSERT(is_address_valid());
 
             error::error_status e = nrf_fstorage_write(&m_fstorage, m_cur_pos + record_size, &buff[0], record_size, NULL);

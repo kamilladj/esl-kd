@@ -91,10 +91,10 @@ namespace nrf
 
         void read_from_page(static_vector<uint8_t, size>& buff)
         {
-            //if (!m_pages[m_cur_page].is_page_empty())
+            if (!m_pages[m_cur_page].is_page_empty())
                 m_pages[m_cur_page].read_last_record(buff);
-            //else
-                //return;
+            else
+                return;
         }
 
         void write_to_page(const static_vector<uint8_t, size>& buff)
@@ -102,13 +102,13 @@ namespace nrf
             if (!(is_record_writable(buff)))
                 return;
 
-            /*if (m_pages[m_cur_page].is_page_full())
+            if (m_pages[m_cur_page].is_page_full())
             {
                 m_cur_page++;
                 m_cur_page %= m_num_of_pages;
-                m_pages[m_cur_page].page_erase();
-                rewrite_page_header();
-            }*/
+                //m_pages[m_cur_page].page_erase();
+                //rewrite_page_header();
+            }
 
             m_pages[m_cur_page].write_new_record(buff);
         }
