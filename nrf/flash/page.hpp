@@ -48,11 +48,6 @@ namespace nrf
             }
         }
 
-        void update_cur_pos()
-        {
-            m_cur_pos += record_size;
-        }
-
         bool is_address_valid()
         {
             if (m_cur_pos >= m_start_addr && m_cur_pos <= m_end_addr)
@@ -170,8 +165,8 @@ namespace nrf
 
         void write_new_record(const static_vector<uint8_t, record_size>& buff)
         {
-            //page_erase();
-
+            //page_erase(); 
+                                                                                                                                                                       
             NRFX_ASSERT(is_address_valid());
 
             error::error_status e = nrf_fstorage_write(&m_fstorage, m_cur_pos + record_size, &buff[0], record_size, NULL);
@@ -179,7 +174,7 @@ namespace nrf
             if (!e)
                 wait_for_flash_ready();
 
-            update_cur_pos();
+            m_cur_pos += record_size;
         }
 
     public:
@@ -198,9 +193,10 @@ namespace nrf
 
     private:
 
-        uint32_t              m_start_addr;
-        uint32_t              m_end_addr;
-        uint32_t              m_cur_pos;
-        nrf_fstorage_t        m_fstorage;
+        uint32_t       m_start_addr;
+        uint32_t       m_end_addr;
+        uint32_t       m_cur_pos;
+        const uint32_t m_max_num_of_records;
+        nrf_fstorage_t m_fstorage;
     };
 }
