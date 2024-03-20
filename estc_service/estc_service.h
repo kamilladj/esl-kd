@@ -37,10 +37,10 @@
 #include "sdk_errors.h"
 
 // TODO: 1. Generate random BLE UUID (Version 4 UUID) and define it in the following format:
-// #define ESTC_BASE_UUID { 0xF6, 0xCE, 0x0F, 0xC4, 0xCE, 0x9F, /* - */ 0xC3, 0x99, /* - */ 0xF7, 0x4D, /* - */ 0xDB, 0xB9, /* - */ 0x00, 0x00, 0xEC, 0x39 } // UUID: EC39xxxx-B9DB-4DF7-99C3-9FCEC40FCEF6
+#define ESTC_BASE_UUID { 0x89, 0xDF, 0x39, 0x6B, 0xDE, 0x58, /* - */ 0x3D, 0x80, /* - */ 0x05, 0x48, /* - */ 0x81, 0x43, /* - */ 0xB9, 0x51, 0x70, 0x3C } // UUID: 3C7051B9-4381-4805-803D-58DE6B39DF89
 
 // TODO: 2. Pick a random service 16-bit UUID and define it:
-// #define ESTC_SERVICE_UUID 0xabcd
+#define ESTC_SERVICE_UUID 0x51B9
 
 typedef struct
 {
