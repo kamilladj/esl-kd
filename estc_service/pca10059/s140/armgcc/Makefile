@@ -1,9 +1,9 @@
 PROJECT_NAME     := estc_service_pca10059_s140
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
-DFU_PORT         ?= /dev/ttyACM0
+DFU_PORT         ?= COM5
 
-SDK_ROOT := ../../../../../..
+SDK_ROOT := C:/esl-nsdk
 PROJ_DIR := ../../..
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
