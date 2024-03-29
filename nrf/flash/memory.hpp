@@ -3,6 +3,10 @@
 #include "page.hpp"
 #include "static_vector.hpp"
 
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_backend_usb.h"
+
 #include "nrf_assert.h"
 #include "nrf_dfu_types.h"
 
@@ -26,10 +30,17 @@ namespace nrf
             , m_cur_page{ 0 }
         {
             NRFX_ASSERT(m_num_of_pages >= 2);
+            erase_all_pages();
             //write_page_headers();
         }
 
     private:
+
+        void erase_all_pages()
+        {
+            for (size_t i = 0; i < m_num_of_pages; i++)
+                m_pages[i].page_erase();
+        }
 
         //bool validate_page_header()
         //{
@@ -94,21 +105,24 @@ namespace nrf
             if (!m_pages[m_cur_page].is_page_empty())
                 m_pages[m_cur_page].read_last_record(buff);
             else
-                return;
+                NRF_LOG_INFO("Nothing to read: current page is empty");
         }
 
         void write_to_page(const static_vector<uint8_t, size>& buff)
         {
             if (!(is_record_writable(buff)))
-                return;
-
-            if (m_pages[m_cur_page].is_page_full())
             {
-                m_cur_page++;
-                m_cur_page %= m_num_of_pages;
-                //m_pages[m_cur_page].page_erase();
-                //rewrite_page_header();
+                NRF_LOG_INFO("Record not writtable");
+                return;
             }
+
+            //if (m_pages[m_cur_page].is_page_full())
+            //{
+            //    m_cur_page++;
+            //    m_cur_page %= m_num_of_pages;
+            //    //m_pages[m_cur_page].page_erase();
+            //    //rewrite_page_header();
+            //}
 
             m_pages[m_cur_page].write_new_record(buff);
         }
@@ -118,7 +132,7 @@ namespace nrf
         uint32_t                       m_start_addr;
         uint32_t                       m_end_addr;
         static const uint32_t          m_page_header_size = 10;
-        static const uint32_t          m_num_of_pages = 3;
+        static const uint32_t          m_num_of_pages = NRF_DFU_APP_DATA_AREA_SIZE / CODE_PAGE_SIZE;
         page<m_page_header_size, size> m_pages[m_num_of_pages];
         uint8_t                        m_cur_page;
     };
