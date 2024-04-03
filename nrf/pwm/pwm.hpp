@@ -129,8 +129,6 @@ namespace nrf
 
         void update_hsv()
         {
-            NRF_LOG_INFO("Update hsv");
-
             if (m_blink_mode == hue_mode)
                 m_hsv.update_hue();
             else if (m_blink_mode == saturation_mode)
@@ -145,7 +143,7 @@ namespace nrf
 
         void double_click_handler()
         {
-            m_storage.save(m_hsv);
+            //m_storage.save(m_hsv);
 
             change_mode();
 
@@ -168,7 +166,8 @@ namespace nrf
             else
             {
                 m_step_value = 0;
-                //m_storage.save(m_hsv);
+                NRF_LOG_INFO("HSV values : H = %d, S = %d, V = %d", m_hsv.get_hue(), m_hsv.get_sat(), m_hsv.get_val());
+                m_storage.save(m_hsv);
             }
 
             //m_storage.save(m_hsv);

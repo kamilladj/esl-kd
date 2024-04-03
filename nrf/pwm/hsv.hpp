@@ -26,6 +26,8 @@ namespace nrf
 
         void update_hue()
         {
+            NRF_LOG_INFO("HUE");
+
             m_hue += 1;
             if (m_hue >= 255)
                 m_hue = 0;
@@ -33,6 +35,8 @@ namespace nrf
 
         void update_saturation()
         {
+            NRF_LOG_INFO("SAT");
+
             static directions dir = up;
 
             if (dir == up)
@@ -51,6 +55,8 @@ namespace nrf
 
         void update_value()
         {
+            NRF_LOG_INFO("VAL");
+
             static directions dir = up;
 
             if (dir == up)
