@@ -30,17 +30,10 @@ namespace nrf
             , m_cur_page{ 0 }
         {
             NRFX_ASSERT(m_num_of_pages >= 2);
-            erase_all_pages();
             //write_page_headers();
         }
 
     private:
-
-        void erase_all_pages()
-        {
-            for (size_t i = 0; i < m_num_of_pages; i++)
-                m_pages[i].page_erase();
-        }
 
         //bool validate_page_header()
         //{
@@ -89,11 +82,8 @@ namespace nrf
 
         bool is_record_writable(const static_vector<uint8_t, size>& buff)
         {
-            for (size_t i = 0; i < size; i++)
-            {
-                if (buff[i] == 0xFF)
-                    return false;
-            }
+            if (buff[0] == 0xFF)
+                return false;
 
             return true;
         }
@@ -116,13 +106,13 @@ namespace nrf
                 return;
             }
 
-            //if (m_pages[m_cur_page].is_page_full())
-            //{
-            //    m_cur_page++;
-            //    m_cur_page %= m_num_of_pages;
-            //    //m_pages[m_cur_page].page_erase();
-            //    //rewrite_page_header();
-            //}
+            if (m_pages[m_cur_page].is_page_full())
+            {
+                m_cur_page++;
+                m_cur_page %= m_num_of_pages;
+                m_pages[m_cur_page].page_erase();
+                //rewrite_page_header();
+            }
 
             m_pages[m_cur_page].write_new_record(buff);
         }
