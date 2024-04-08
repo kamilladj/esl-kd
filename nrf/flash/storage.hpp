@@ -2,6 +2,7 @@
 
 #include "hsv.hpp"
 #include "memory.hpp"
+//#include "serializer.hpp"
 
 #include "static_vector.hpp"
 
@@ -21,66 +22,23 @@ namespace nrf
 
     private:
 
-        //void serialize(static_vector<uint8_t, size>& buff, uint8_t val)
-        //{
-        //    buff[0] = val & 0xFF;
-        //}
-
-        //void serialize(static_vector<int8_t, size>& buff, int8_t val)
-        //{
-        //    buff[0] = val & 0xFF;
-        //}
-
-        //void serialize(static_vector<uint8_t, size>& buff, uint16_t val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, int16_t val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, uint32_t val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, int32_t val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, uint64_t val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, int64_t val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, char val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, short int val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, int val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, long int val)
-        //{}
-
-        ////void serialize(static_vector<uint8_t, size>& buff, long long int val)
-        ////{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, double val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, long double val)
-        //{}
-
-        //void serialize(static_vector<uint8_t, size>& buff, float vall)
-        //{}
-
-        void serialize(const T& obj, static_vector<uint8_t, size>& buff)
+        void serialize(static_vector<uint8_t, size>& buff, const T& obj)
         {
             memcpy(&buff[size - sizeof(obj)], &obj, sizeof(obj));
+
+            //serialize<size>(buff, obj.get_hue());
+            //serialize<size>(buff, obj.get_sat());
+            //serialize<size>(buff, obj.get_val());
         }
 
-        void deserialize(const static_vector<uint8_t, size>& buff, T& obj)
+        void deserialize(T& obj, const static_vector<uint8_t, size>& buff)
         {
             memcpy(&obj, &buff[size - sizeof(obj)], sizeof(obj));
+
+            /*uint16_t h = (buff[10] << 8) | buff[11]);
+            uint16_t s = (buff[12] << 8) | buff[13]);
+            uint16_t v = (buff[14] << 8) | buff[15]);
+            obj = hsv(h, s, v);*/
         }
 
     public:
@@ -99,18 +57,18 @@ namespace nrf
             buff.push_back(0); //reserved
             buff.push_back(sizeof(obj)); //body size
             
-            serialize(obj, buff);
+            serialize(buff, obj);
 
             m_memory.write_to_page(buff);
         }
 
-        bool load(T& obj) //be bool
+        bool load(T& obj)
         {
             static_vector<uint8_t, size> buff;
 
             m_memory.read_from_page(buff);
 
-            deserialize(buff, obj);
+            deserialize(obj, buff);
 
             return true;
         }
