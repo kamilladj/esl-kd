@@ -32,7 +32,7 @@
 
 #include "estc_service.h"
 
-#define DEVICE_NAME                     "ESTC-GATT"                             /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "KamillaDjuldibaeva"                    /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_ADV_INTERVAL                300                                     /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 
@@ -51,9 +51,15 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+#define NOTIFY_UPDATE_INTERVAL          400
+#define INDICATE_UPDATE_INTERVAL        800
+
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
+
+APP_TIMER_DEF(m_notify_timer);
+APP_TIMER_DEF(m_indicate_timer);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
@@ -65,6 +71,9 @@ static ble_uuid_t m_adv_uuids[] =                                               
 };
 
 ble_estc_service_t m_estc_service; /**< ESTC example BLE service */
+
+static uint8_t m_notify_char_value = 0;
+static uint8_t m_indicate_char_value = 0;
 
 static void advertising_start(void);
 
@@ -89,10 +98,38 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  *
  * @details Initializes the timer module. This creates and starts application timers.
  */
+
+static void notify_timer_handler(void *p_context)
+{
+    m_notify_char_value++;
+
+    estc_ble_send_characteristic_value(m_estc_service.connection_handle, 
+                                       m_estc_service.characteristic_notify_handle.value_handle, 
+                                       BLE_GATT_HVX_NOTIFICATION,
+                                       sizeof(m_notify_char_value), 
+                                       m_notify_char_value);
+}
+
+static void indicate_timer_handler(void *p_context)
+{
+    m_indicate_char_value++;
+
+    estc_ble_send_characteristic_value(m_estc_service.connection_handle,
+                                       m_estc_service.characteristic_indicate_handle.value_handle, 
+                                       BLE_GATT_HVX_INDICATION,
+                                       sizeof(m_indicate_char_value), 
+                                       m_indicate_char_value);
+}
+
 static void timers_init(void)
 {
     // Initialize timer module.
     ret_code_t err_code = app_timer_init();
+    APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_create(&m_notify_timer, APP_TIMER_MODE_REPEATED, notify_timer_handler);
+    APP_ERROR_CHECK(err_code);
+    err_code = app_timer_create(&m_indicate_timer, APP_TIMER_MODE_REPEATED, indicate_timer_handler);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -228,6 +265,12 @@ static void conn_params_init(void)
  */
 static void application_timers_start(void)
 {
+    ret_code_t err_code;
+
+    err_code = app_timer_start(m_notify_timer, NOTIFY_UPDATE_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
+    err_code = app_timer_start(m_indicate_timer, INDICATE_UPDATE_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -295,6 +338,8 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected (conn_handle: %d)", p_ble_evt->evt.gap_evt.conn_handle);
             // LED indication will be changed when advertising starts.
+            app_timer_stop(m_notify_timer);
+            app_timer_stop(m_indicate_timer);
             break;
 
         case BLE_GAP_EVT_CONNECTED:

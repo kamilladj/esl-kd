@@ -77,7 +77,7 @@ static ret_code_t estc_ble_add_characteristics(ble_estc_service_t *service)
     error_code = sd_ble_gatts_characteristic_add(service->service_handle, &char_md, &attr_char_value, &service->characteristic_handle);
     APP_ERROR_CHECK(error_code);
 
-    return NRF_SUCCESS;
+    return error_code;
 }
 
 static ret_code_t estc_ble_add_notify_characteristics(ble_estc_service_t* service)
@@ -102,13 +102,13 @@ static ret_code_t estc_ble_add_notify_characteristics(ble_estc_service_t* servic
     ble_gatts_attr_t attr_char_value = { 0 };
     attr_char_value.p_uuid = &characteristic_uuid;
     attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len = 1;
-    attr_char_value.max_len = 1;
+    attr_char_value.init_len = sizeof(uint8_t);
+    attr_char_value.max_len = sizeof(uint8_t);
 
     error_code = sd_ble_gatts_characteristic_add(service->service_handle, &char_md, &attr_char_value, &service->characteristic_notify_handle);
     APP_ERROR_CHECK(error_code);
 
-    return NRF_SUCCESS;
+    return error_code;
 }
 
 static ret_code_t estc_ble_add_indicate_characteristics(ble_estc_service_t* service)
@@ -133,11 +133,29 @@ static ret_code_t estc_ble_add_indicate_characteristics(ble_estc_service_t* serv
     ble_gatts_attr_t attr_char_value = { 0 };
     attr_char_value.p_uuid = &characteristic_uuid;
     attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len = 1;
-    attr_char_value.max_len = 1;
+    attr_char_value.init_len = sizeof(uint8_t);
+    attr_char_value.max_len = sizeof(uint8_t);
 
     error_code = sd_ble_gatts_characteristic_add(service->service_handle, &char_md, &attr_char_value, &service->characteristic_indicate_handle);
     APP_ERROR_CHECK(error_code);
 
-    return NRF_SUCCESS;
+    return error_code;
 }
+
+ret_code_t estc_ble_send_characteristic_value(uint16_t conn_handle, uint16_t value_handle, uint8_t type, uint16_t len, uint8_t value)
+{
+    ret_code_t error_code = NRF_SUCCESS;
+
+    ble_gatts_hvx_params_t hvx_params;
+
+    hvx_params.handle = value_handle;
+    hvx_params.type = type;
+    hvx_params.offset = 0;
+    hvx_params.p_len = &len;
+    hvx_params.p_data = &value;
+
+    error_code = sd_ble_gatts_hvx(conn_handle, &hvx_params);
+
+    return error_code;
+}
+
