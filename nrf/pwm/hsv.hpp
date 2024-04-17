@@ -75,17 +75,17 @@ namespace nrf
 
     public:
 
-        uint16_t get_hue()
+        uint16_t get_hue() const
         {
             return m_hue;
         }
 
-        uint16_t get_sat()
+        uint16_t get_sat() const
         {
             return m_sat;
         }
 
-        uint16_t get_val()
+        uint16_t get_val() const
         {
             return m_val;
         }
