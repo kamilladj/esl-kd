@@ -2,7 +2,7 @@
 
 #include "hsv.hpp"
 #include "memory.hpp"
-//#include "serializer.hpp"
+#include "serializer.hpp"
 
 #include "static_vector.hpp"
 
@@ -24,21 +24,17 @@ namespace nrf
 
         void serialize(static_vector<uint8_t, size>& buff, const T& obj)
         {
-            memcpy(&buff[size - sizeof(obj)], &obj, sizeof(obj));
-
-            //serialize<size>(buff, obj.get_hue());
-            //serialize<size>(buff, obj.get_sat());
-            //serialize<size>(buff, obj.get_val());
+            nrf::serialize<size>(buff, obj.get_hue());
+            nrf::serialize<size>(buff, obj.get_sat());
+            nrf::serialize<size>(buff, obj.get_val());
         }
 
         void deserialize(T& obj, const static_vector<uint8_t, size>& buff)
         {
-            memcpy(&obj, &buff[size - sizeof(obj)], sizeof(obj));
-
-            /*uint16_t h = (buff[10] << 8) | buff[11]);
-            uint16_t s = (buff[12] << 8) | buff[13]);
-            uint16_t v = (buff[14] << 8) | buff[15]);
-            obj = hsv(h, s, v);*/
+            uint16_t h = ((buff[11] << 8) | buff[10]);
+            uint16_t s = ((buff[13] << 8) | buff[12]);
+            uint16_t v = ((buff[15] << 8) | buff[14]);
+            obj = hsv(h, s, v);
         }
 
     public:
