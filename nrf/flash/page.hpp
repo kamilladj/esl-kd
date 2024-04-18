@@ -31,6 +31,7 @@ namespace nrf
             , m_max_num_of_records{CODE_PAGE_SIZE/record_size}
         {
             fstorage_init();
+            //page_erase();
             find_cur_pos();
         }
 
@@ -42,14 +43,14 @@ namespace nrf
 
             for (m_cur_pos = last_record_addr; m_cur_pos >= m_start_addr; m_cur_pos -= record_size)
             {
-                if (read_byte() != 0xFF)
+                if (read_byte(m_cur_pos) != 0xFF)
                     return;
             }
         }
 
-        bool is_address_valid()
+        bool is_address_valid(uint32_t addr)
         {
-            if (m_cur_pos >= m_start_addr && m_cur_pos <= m_end_addr)
+            if (addr >= m_start_addr && addr <= m_end_addr)
                 return true;
             else
                 return false;
@@ -95,13 +96,13 @@ namespace nrf
 
     public:
 
-        uint8_t read_byte()
+        uint8_t read_byte(uint32_t addr)
         {
             uint8_t res;
 
-            NRFX_ASSERT(is_address_valid());
+            NRFX_ASSERT(is_address_valid(addr));
 
-            error::error_status e = nrf_fstorage_read(&m_fstorage, m_cur_pos, &res, sizeof(res));
+            error::error_status e = nrf_fstorage_read(&m_fstorage, addr, &res, sizeof(res));
 
             if (!e)
                 wait_for_flash_ready();
@@ -147,7 +148,7 @@ namespace nrf
 
         void read_last_record(static_vector<uint8_t, record_size>& buff)
         {
-            NRFX_ASSERT(is_address_valid());
+            NRFX_ASSERT(is_address_valid(m_cur_pos));
 
             error::error_status e = nrf_fstorage_read(&m_fstorage, m_cur_pos, &buff[0], record_size);
 
@@ -157,7 +158,7 @@ namespace nrf
 
         void write_new_record(const static_vector<uint8_t, record_size>& buff)
         {                     
-            NRFX_ASSERT(is_address_valid());
+            NRFX_ASSERT(is_address_valid(m_cur_pos));
 
             error::error_status e = nrf_fstorage_write(&m_fstorage, m_cur_pos + record_size, &buff[0], record_size, NULL);
 

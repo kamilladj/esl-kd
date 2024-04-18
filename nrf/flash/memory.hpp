@@ -90,12 +90,14 @@ namespace nrf
 
     public:
 
-        void read_from_page(static_vector<uint8_t, size>& buff)
+        bool read_from_page(static_vector<uint8_t, size>& buff)
         {
-            if (!m_pages[m_cur_page].is_page_empty())
-                m_pages[m_cur_page].read_last_record(buff);
+            if (m_pages[m_cur_page].is_page_empty())
+                return false;
             else
-                NRF_LOG_INFO("Nothing to read: current page is empty");
+                m_pages[m_cur_page].read_last_record(buff);
+
+            return true;
         }
 
         void write_to_page(const static_vector<uint8_t, size>& buff)

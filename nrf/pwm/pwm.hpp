@@ -143,8 +143,6 @@ namespace nrf
 
         void double_click_handler()
         {
-            //m_storage.save(m_hsv);
-
             change_mode();
 
             m_seq_values.channel_0 = 0;
@@ -169,8 +167,6 @@ namespace nrf
                 NRF_LOG_INFO("HSV values : H = %d, S = %d, V = %d", m_hsv.get_hue(), m_hsv.get_sat(), m_hsv.get_val());
                 m_storage.save(m_hsv);
             }
-
-            //m_storage.save(m_hsv);
         }
 
     private:

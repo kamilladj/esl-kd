@@ -66,11 +66,11 @@ namespace nrf
         {
             static_vector<uint8_t, size> buff;
 
-            m_memory.read_from_page(buff);
+            bool res = m_memory.read_from_page(buff);
 
             deserialize(obj, buff);
 
-            return true;
+            return res;
         }
 
     private:
