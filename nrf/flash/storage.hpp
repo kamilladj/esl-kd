@@ -31,9 +31,9 @@ namespace nrf
 
         void deserialize(T& obj, const static_vector<uint8_t, size>& buff)
         {
-            uint16_t h = ((buff[11] << 8) | buff[10]);
-            uint16_t s = ((buff[13] << 8) | buff[12]);
-            uint16_t v = ((buff[15] << 8) | buff[14]);
+            uint16_t h = (buff[10] << 8) | buff[11];
+            uint16_t s = (buff[12] << 8) | buff[13];
+            uint16_t v = (buff[14] << 8) | buff[15];
             obj = hsv(h, s, v);
         }
 
@@ -64,7 +64,8 @@ namespace nrf
 
             bool res = m_memory.read_from_page(buff);
 
-            deserialize(obj, buff);
+            if (res)
+                deserialize(obj, buff);
 
             return res;
         }
