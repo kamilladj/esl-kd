@@ -105,6 +105,9 @@ namespace nrf
 
             m_pages[i].read_page_header(buff);
 
+            uint16_t crc = (buff[5] << 8) | buff[6];
+
+            return crc == nrf::crc16(&buff[0], 5);
         }
 
         bool are_all_page_headers_valid()

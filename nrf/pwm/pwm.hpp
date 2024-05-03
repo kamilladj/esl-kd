@@ -198,7 +198,7 @@ namespace nrf
         nrfx_pwm_t                  m_pwm_instance;
         nrf_pwm_values_individual_t m_seq_values;
         hsv                         m_hsv;
-        storage<hsv, 16>            m_storage;
+        storage<hsv>                m_storage;
         static mutex                m_mtx;
         static handlers_vector      m_handlers;
     };
