@@ -49,7 +49,7 @@ namespace nrf
 
         bool is_full()
         {
-            return m_cur_pos + 2 * record_size >= m_end_addr;
+            return m_cur_pos + 2 * record_size > m_end_addr;
         }
 
     public:
