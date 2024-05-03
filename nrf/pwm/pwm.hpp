@@ -35,7 +35,8 @@ namespace nrf
             , m_hsv{ device_id }
             , m_storage{}
         {
-            m_storage.load(m_hsv);
+            if (!m_storage.load(m_hsv))
+                m_storage.save(m_hsv);           
 
             error::error_status err = init();
 
