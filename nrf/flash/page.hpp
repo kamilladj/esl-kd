@@ -19,7 +19,7 @@
 
 namespace nrf
 {
-    template<size_t header_size, size_t record_size>
+    template<size_t record_size, size_t header_size>
     class page
     {
     public:
@@ -27,26 +27,54 @@ namespace nrf
         page(uint32_t start_addr = 0, uint32_t end_addr = 0)
             : m_start_addr{start_addr}
             , m_end_addr{end_addr}
-            , m_cur_pos{start_addr}
-            , m_max_num_of_records{CODE_PAGE_SIZE/record_size}
+            , m_cur_pos{start_addr}                     
         {
             fstorage_init();
-            //page_erase();
-            find_cur_pos();
         }
 
-    private:
+    public:
+
+        uint32_t get_index(size_t offset)
+        {
+            return read_byte(m_start_addr + offset);
+        }
+
+    public:
+
+        bool is_empty()
+        {
+            return m_cur_pos < m_start_addr + header_size;
+
+        }
+
+        bool is_full()
+        {
+            return m_cur_pos + 2 * record_size >= m_end_addr;
+        }
+
+    public:
 
         void find_cur_pos()
         {
-            uint32_t last_record_addr = m_start_addr + record_size * (m_max_num_of_records - 1); //256-1
+            uint32_t first_record_addr = m_start_addr + header_size;
+            uint32_t max_num_of_records = (CODE_PAGE_SIZE - header_size) / record_size;
+            uint32_t last_record_addr = first_record_addr + record_size * (max_num_of_records - 1);
 
-            for (m_cur_pos = last_record_addr; m_cur_pos >= m_start_addr; m_cur_pos -= record_size)
+            for (m_cur_pos = last_record_addr; m_cur_pos >= first_record_addr; m_cur_pos -= record_size)
             {
                 if (read_byte(m_cur_pos) != 0xFF)
                     return;
             }
+
+            m_cur_pos = 0;
         }
+
+        uint32_t get_cur_pos() const
+        {
+            return m_cur_pos;
+        }
+
+    private:
 
         bool is_address_valid(uint32_t addr)
         {
@@ -88,6 +116,8 @@ namespace nrf
             return nrf_fstorage_init(&m_fstorage, &nrf_fstorage_nvmc, NULL);
         }
 
+    private:
+
         void wait_for_flash_ready()
         {
             while (nrf_fstorage_is_busy(&m_fstorage))
@@ -112,22 +142,8 @@ namespace nrf
 
     public:
 
-        bool is_page_empty()
+        void read_page_header(static_vector<uint8_t, header_size>& buff)
         {
-            return m_cur_pos == m_start_addr;
-        }
-
-        bool is_page_full()
-        {
-            return m_cur_pos + 2 * record_size > m_end_addr;
-        }
-
-    public:
-
-        /*void read_page_header(static_vector<uint8_t, header_size>& buff)
-        {
-            NRFX_ASSERT(is_address_valid());
-
             error::error_status e = nrf_fstorage_read(&m_fstorage, m_start_addr, &buff[0], header_size);
 
             if (!e)
@@ -136,13 +152,11 @@ namespace nrf
 
         void write_page_header(const static_vector<uint8_t, header_size>& buff)
         {
-            NRFX_ASSERT(is_address_valid());
-
             error::error_status e = nrf_fstorage_write(&m_fstorage, m_start_addr, &buff[0], header_size, NULL);
 
             if (!e)
                 wait_for_flash_ready();
-        }*/
+        }
 
     public:
 
@@ -158,6 +172,9 @@ namespace nrf
 
         void write_new_record(const static_vector<uint8_t, record_size>& buff)
         {                     
+            if (m_cur_pos == 0)
+                m_cur_pos = m_start_addr + header_size;
+
             NRFX_ASSERT(is_address_valid(m_cur_pos));
 
             error::error_status e = nrf_fstorage_write(&m_fstorage, m_cur_pos + record_size, &buff[0], record_size, NULL);
@@ -170,7 +187,7 @@ namespace nrf
 
     public:
 
-        void page_erase()
+        void erase()
         {
             m_cur_pos = m_start_addr;
 
@@ -187,7 +204,6 @@ namespace nrf
         uint32_t       m_start_addr;
         uint32_t       m_end_addr;
         uint32_t       m_cur_pos;
-        const uint32_t m_max_num_of_records;
         nrf_fstorage_t m_fstorage;
     };
 }
