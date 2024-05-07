@@ -14,38 +14,40 @@ namespace nrf
             : m_hue{uint16_t((device_id%100)*255/100)}
             , m_sat{255}
             , m_val{255}
-            , m_step_value{1}
         {}
 
         hsv(uint16_t h, uint16_t s, uint16_t v)
             : m_hue{h}
             , m_sat{s}
             , m_val{v}
-            , m_step_value{1}
         {}
 
     public:
 
         void update_hue()
         {
-            m_hue += m_step_value;
+            NRF_LOG_INFO("HUE");
+
+            m_hue += 1;
             if (m_hue >= 255)
                 m_hue = 0;
         }
 
         void update_saturation()
         {
+            NRF_LOG_INFO("SAT");
+
             static directions dir = up;
 
             if (dir == up)
             {
-                m_sat += m_step_value;
+                m_sat += 1;
                 if (m_sat >= 255)
                     dir = down;
             }
             else
             {
-                m_sat -= m_step_value;
+                m_sat -= 1;
                 if (m_sat == 0)
                     dir = up;
             }
@@ -53,17 +55,19 @@ namespace nrf
 
         void update_value()
         {
+            NRF_LOG_INFO("VAL");
+
             static directions dir = up;
 
             if (dir == up)
             {
-                m_val += m_step_value;
+                m_val += 1;
                 if (m_val >= 255)
                     dir = down;
             }
             else
             {
-                m_val -= m_step_value;
+                m_val -= 1;
                 if (m_val == 0)
                     dir = up;
             }
@@ -71,17 +75,17 @@ namespace nrf
 
     public:
 
-        uint16_t get_hue()
+        uint16_t get_hue() const
         {
             return m_hue;
         }
 
-        uint16_t get_sat()
+        uint16_t get_sat() const
         {
             return m_sat;
         }
 
-        uint16_t get_val()
+        uint16_t get_val() const
         {
             return m_val;
         }
@@ -91,6 +95,5 @@ namespace nrf
         uint16_t m_hue; //in degrees
         uint16_t m_sat;
         uint16_t m_val;
-        uint16_t m_step_value;
     };
 }

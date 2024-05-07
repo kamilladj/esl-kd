@@ -34,6 +34,7 @@ SRC_FILES += \
 	$(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.s \
 	$(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
 	$(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
+	$(SDK_ROOT)/modules/nrfx/hal/nrf_nvmc.c \
 	$(SDK_ROOT)/components/boards/boards.c \
 	$(SDK_ROOT)/components/libraries/atomic_fifo/nrf_atfifo.c \
 	$(SDK_ROOT)/components/libraries/timer/app_timer2.c \
@@ -59,6 +60,8 @@ SRC_FILES += \
     $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
 	$(SDK_ROOT)/components/libraries/util/app_util_platform.c \
 	$(SDK_ROOT)/components/libraries/util/nrf_assert.c \
+	$(SDK_ROOT)/components/libraries/fstorage/nrf_fstorage_nvmc.c \
+	$(SDK_ROOT)/components/libraries/fstorage/nrf_fstorage.c \
 	$(SDK_ROOT)/external/fprintf/nrf_fprintf.c \
 	$(SDK_ROOT)/external/fprintf/nrf_fprintf_format.c
 
@@ -71,6 +74,7 @@ INC_FOLDERS += \
 	$(PROJ_DIR)/nrf/mt \
 	$(PROJ_DIR)/nrf/pwm \
 	$(PROJ_DIR)/nrf/timers \
+	$(PROJ_DIR)/nrf/flash \
 	$(PROJ_DIR)/utils \
 	$(PROJ_DIR)/error \
 	$(PROJ_DIR)/simpletest \
@@ -104,6 +108,7 @@ INC_FOLDERS += \
 	$(SDK_ROOT)/components/libraries/usbd/class/cdc \
 	$(SDK_ROOT)/components/libraries/usbd/class/cdc/acm \
 	$(SDK_ROOT)/components/libraries/bootloader/dfu \
+	$(SDK_ROOT)/components/libraries/fstorage \
 	$(SDK_ROOT)/external/fprintf \
 	$(SDK_ROOT)/external/utf_converter
 
