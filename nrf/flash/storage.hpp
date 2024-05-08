@@ -5,6 +5,7 @@
 #include "serializer.hpp"
 
 #include "static_vector.hpp"
+#include "crc16.hpp"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -21,7 +22,7 @@ namespace nrf
         {
             uint16_t crc = (buff[5] << 8) | buff[6];
 
-            return crc == nrf::crc16(&buff[0], 5);
+            return crc == utils::crc16(&buff[0], 5);
         }
 
         void fill_record_header(static_vector<uint8_t, record_size>& buff, const T& obj)

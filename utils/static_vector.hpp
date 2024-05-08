@@ -1,6 +1,6 @@
 #pragma once
 
-#include "my_aligned_storage.hpp"
+#include "aligned_storage.hpp"
 #include <utility>
 #include "nrf_assert.h"
 #include <stddef.h>
@@ -11,7 +11,7 @@ class static_vector
 {
 private:
 	// properly aligned uninitialized storage for N T's
-	my::aligned_storage<T, size> m_storage;
+	utils::aligned_storage<T, size> m_storage;
 	size_t m_size;
 
 	//utility functions used by =operator & swap method

@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 
-namespace my
+namespace utils
 {
 
 	template<typename T, size_t sz = 0>
@@ -68,4 +68,4 @@ namespace my
 		}
 	};
 
-}
+}  // namespace utils

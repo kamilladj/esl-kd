@@ -54,7 +54,7 @@ namespace nrf
 
     public:
 
-        void find_cur_pos()
+        void update_cur_pos()
         {
             uint32_t first_record_addr = m_start_addr + header_size;
             uint32_t max_num_of_records = (CODE_PAGE_SIZE - header_size) / record_size;
