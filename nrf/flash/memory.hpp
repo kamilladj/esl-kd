@@ -15,6 +15,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#define MAX_PAGE_INDEX_NUMBER 100
+
 namespace nrf
 {
     template<size_t record_size, size_t header_size = 8>
@@ -32,7 +34,7 @@ namespace nrf
         {
             NRFX_ASSERT(m_num_of_pages >= 2);
             check_pages_format();
-            find_cur_page();
+            update_cur_page();
         }
         
     private:
@@ -42,15 +44,15 @@ namespace nrf
             for (size_t i = 0; i < m_num_of_pages; i++)
             {
                 if (!is_page_header_valid(i))
-                    edit_page(i, 0);
+                    erase_page(i, 0);
 
-                m_pages[i].find_cur_pos();
+                m_pages[i].update_cur_pos();
             }
 
             NRFX_ASSERT(are_all_page_headers_valid());
         }
 
-        void find_cur_page()
+        void update_cur_page()
         {
             size_t max = m_pages[0].get_index(m_page_index_offset);
 
@@ -64,7 +66,7 @@ namespace nrf
                     m_cur_page = i;
                 }
 
-                if (index == 100 && m_pages[i].is_full())
+                if (index == MAX_PAGE_INDEX_NUMBER && m_pages[i].is_full())
                 {
                     m_cur_page++;
                     m_cur_page %= m_num_of_pages;
@@ -73,7 +75,7 @@ namespace nrf
             }
         }
 
-        void edit_page(size_t i, size_t index)
+        void erase_page(size_t i, size_t index)
         {
             m_pages[i].erase();
 
@@ -90,10 +92,10 @@ namespace nrf
             m_cur_page %= m_num_of_pages;
 
             size_t new_index = index++;
-            if (new_index > 100)
+            if (new_index > MAX_PAGE_INDEX_NUMBER)
                 new_index = 0;
 
-            edit_page(m_cur_page, new_index);
+            erase_page(m_cur_page, new_index);
         }
 
     private:
@@ -165,7 +167,7 @@ namespace nrf
             if (m_pages[m_cur_page].is_full())
             {
                 switch_to_next_page();
-                m_pages[m_cur_page].find_cur_pos();
+                m_pages[m_cur_page].update_cur_pos();
             }
 
             m_pages[m_cur_page].write_new_record(buff);
