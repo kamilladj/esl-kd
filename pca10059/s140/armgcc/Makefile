@@ -2,6 +2,7 @@ PROJECT_NAME     := estc_gatt_srv_pca10059_s140
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 DFU_PORT         ?= COM5
+RUN_TESTS        ?= FALSE
 
 SDK_ROOT := C:/esl-nsdk
 PROJ_DIR := ../../..
@@ -10,6 +11,14 @@ $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := estc_gatt_srv_gcc_nrf52.ld
 
 # Source files common to all targets
+ifeq ($(RUN_TESTS), TRUE)
+SRC_FILES += \
+    $(PROJ_DIR)/simpletest/simpletest.cpp \
+    $(wildcard $(PROJ_DIR)/tests/*.cpp)
+else
+SRC_FILES += \
+    $(PROJ_DIR)/main.cpp
+endif
 SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
@@ -21,6 +30,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pwm.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_power.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
@@ -93,12 +103,20 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/common/ble_conn_params.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
-  $(PROJ_DIR)/estc_service.c \
-  $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/estc_service.cpp \
 
 # Include folders common to all targets
 INC_FOLDERS += \
   ../config \
+  $(PROJ_DIR)/nrf/ \
+  $(PROJ_DIR)/nrf/buttons \
+  $(PROJ_DIR)/nrf/mt \
+  $(PROJ_DIR)/nrf/pwm \
+  $(PROJ_DIR)/nrf/timers \
+  $(PROJ_DIR)/nrf/flash \
+  $(PROJ_DIR)/utils \
+  $(PROJ_DIR)/error \
+  $(PROJ_DIR)/simpletest \
   $(SDK_ROOT)/modules/nrfx/mdk \
   $(SDK_ROOT)/modules/nrfx/hal \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
@@ -192,6 +210,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/button \
   $(SDK_ROOT)/components/libraries/bsp \
   $(SDK_ROOT)/components/libraries/bootloader/ble_dfu \
+  $(SDK_ROOT)/components/libraries/bootloader/dfu \
   $(SDK_ROOT)/components/libraries/balloc \
   $(SDK_ROOT)/components/libraries/atomic_flags \
   $(SDK_ROOT)/components/libraries/atomic_fifo \
@@ -260,6 +279,25 @@ CFLAGS += -fno-builtin -fshort-enums
 
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)
+CXXFLAGS += -DBOARD_PCA10059
+CXXFLAGS += -DBSP_DEFINES_ONLY
+CXXFLAGS += -DCONFIG_GPIO_AS_PINRESET
+CXXFLAGS += -DFLOAT_ABI_HARD
+CXXFLAGS += -DMBR_PRESENT
+CXXFLAGS += -DNRF52840_XXAA
+CXXFLAGS += -mcpu=cortex-m4
+CXXFLAGS += -mthumb -mabi=aapcs
+CXXFLAGS += -Wall -Werror
+CXXFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+# keep every function in a separate section, this allows linker to discard unused ones
+CXXFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
+CXXFLAGS += -fno-builtin -fshort-enums
+CXXFLAGS += -DAPP_TIMER_V2
+CXXFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
+
+CXXFLAGS += -fno-rtti -fno-exceptions -fno-threadsafe-statics -nostdlib -fno-unwind-tables
+CXXFLAGS += -std=c++17
+
 # Assembler flags common to all targets
 ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
@@ -289,6 +327,8 @@ LDFLAGS += --specs=nano.specs
 
 nrf52840_xxaa: CFLAGS += -D__HEAP_SIZE=8192
 nrf52840_xxaa: CFLAGS += -D__STACK_SIZE=8192
+nrf52840_xxaa: CXXFLAGS += -D__HEAP_SIZE=8192
+nrf52840_xxaa: CXXFLAGS += -D__STACK_SIZE=8192
 nrf52840_xxaa: ASMFLAGS += -D__HEAP_SIZE=8192
 nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=8192
 

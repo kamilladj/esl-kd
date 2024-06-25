@@ -2,6 +2,11 @@
 
 #include <stdint.h>
 
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+#include "nrf_log_backend_usb.h"
+
 namespace nrf
 {
     enum directions { up, down };
