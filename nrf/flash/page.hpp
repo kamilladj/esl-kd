@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nrf_fstorage.h"
-#include "nrf_fstorage_nvmc.h"
+#include "nrf_fstorage_sd.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -113,7 +113,7 @@ namespace nrf
             m_fstorage.start_addr = m_start_addr;
             m_fstorage.end_addr = m_end_addr;
 
-            return nrf_fstorage_init(&m_fstorage, &nrf_fstorage_nvmc, NULL);
+            return nrf_fstorage_init(&m_fstorage, &nrf_fstorage_sd, NULL);
         }
 
     private:
@@ -121,7 +121,7 @@ namespace nrf
         void wait_for_flash_ready()
         {
             while (nrf_fstorage_is_busy(&m_fstorage))
-                __WFE();
+                nrf_pwr_mgmt_run();
         }
 
     public:

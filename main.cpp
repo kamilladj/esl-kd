@@ -25,12 +25,16 @@
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
 
+#include "app_usbd.h"
+
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "estc_service.h"
+#include "estc_service.hpp"
+
+#include "pwm.hpp"
 
 #define DEVICE_NAME                     "KamillaDjuldibaeva"                    /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -51,15 +55,11 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define NOTIFY_UPDATE_INTERVAL          400
-#define INDICATE_UPDATE_INTERVAL        800
+#define DEVICE_ID                       7207
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
-
-APP_TIMER_DEF(m_notify_timer);
-APP_TIMER_DEF(m_indicate_timer);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
@@ -72,10 +72,39 @@ static ble_uuid_t m_adv_uuids[] =                                               
 
 ble_estc_service_t m_estc_service; /**< ESTC example BLE service */
 
-static uint8_t m_notify_char_value = 0;
-static uint8_t m_indicate_char_value = 0;
+void pwm_handler() {}
+
+nrf::pwm<0> pwm(DEVICE_ID, pwm_handler);
+
 
 static void advertising_start(void);
+
+
+void update_color(const ble_evt_t* ble_evt)
+{
+    NRF_LOG_INFO("Value updated");
+
+    const ble_gatts_evt_write_t* evt_write = &ble_evt->evt.gatts_evt.params.write;
+
+    if (evt_write->handle == m_estc_service.characteristic_write_handle.value_handle)
+    {
+        uint16_t h = evt_write->data[1];
+        uint16_t s = evt_write->data[3];
+        uint16_t v = evt_write->data[5];
+
+        nrf::hsv color = nrf::hsv(h, s, v);
+        pwm.set_hsv(color);
+        pwm.update_led2();
+
+        estc_ble_send_characteristic_value(m_estc_service.connection_handle,
+                                           m_estc_service.characteristic_notify_handle.value_handle,
+                                           BLE_GATT_HVX_NOTIFICATION,
+                                           sizeof(nrf::hsv),
+                                           evt_write->data);
+
+        pwm.save_color();
+    }
+}
 
 
 /**@brief Callback function for asserts in the SoftDevice.
@@ -99,37 +128,10 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  * @details Initializes the timer module. This creates and starts application timers.
  */
 
-static void notify_timer_handler(void *p_context)
-{
-    m_notify_char_value++;
-
-    estc_ble_send_characteristic_value(m_estc_service.connection_handle, 
-                                       m_estc_service.characteristic_notify_handle.value_handle, 
-                                       BLE_GATT_HVX_NOTIFICATION,
-                                       sizeof(m_notify_char_value), 
-                                       m_notify_char_value);
-}
-
-static void indicate_timer_handler(void *p_context)
-{
-    m_indicate_char_value++;
-
-    estc_ble_send_characteristic_value(m_estc_service.connection_handle,
-                                       m_estc_service.characteristic_indicate_handle.value_handle, 
-                                       BLE_GATT_HVX_INDICATION,
-                                       sizeof(m_indicate_char_value), 
-                                       m_indicate_char_value);
-}
-
 static void timers_init(void)
 {
     // Initialize timer module.
     ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
-
-    err_code = app_timer_create(&m_notify_timer, APP_TIMER_MODE_REPEATED, notify_timer_handler);
-    APP_ERROR_CHECK(err_code);
-    err_code = app_timer_create(&m_indicate_timer, APP_TIMER_MODE_REPEATED, indicate_timer_handler);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -265,12 +267,6 @@ static void conn_params_init(void)
  */
 static void application_timers_start(void)
 {
-    ret_code_t err_code;
-
-    err_code = app_timer_start(m_notify_timer, NOTIFY_UPDATE_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code);
-    err_code = app_timer_start(m_indicate_timer, INDICATE_UPDATE_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -338,8 +334,6 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected (conn_handle: %d)", p_ble_evt->evt.gap_evt.conn_handle);
             // LED indication will be changed when advertising starts.
-            app_timer_stop(m_notify_timer);
-            app_timer_stop(m_indicate_timer);
             break;
 
         case BLE_GAP_EVT_CONNECTED:
@@ -356,11 +350,8 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
         {
             NRF_LOG_DEBUG("PHY update request (conn_handle: %d)", p_ble_evt->evt.gap_evt.conn_handle);
-            ble_gap_phys_t const phys =
-            {
-                .rx_phys = BLE_GAP_PHY_AUTO,
-                .tx_phys = BLE_GAP_PHY_AUTO,
-            };
+            ble_gap_phys_t const phys{ BLE_GAP_PHY_AUTO, BLE_GAP_PHY_AUTO };
+
             err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
             APP_ERROR_CHECK(err_code);
         } break;
@@ -379,6 +370,10 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
+            break;
+
+        case BLE_GATTS_EVT_WRITE:
+            update_color(p_ble_evt);
             break;
 
         default:
@@ -537,8 +532,10 @@ int main(void)
 {
     // Initialize.
     log_init();
+
     timers_init();
     buttons_leds_init();
+
     power_management_init();
     ble_stack_init();
     gap_params_init();
@@ -546,19 +543,22 @@ int main(void)
     services_init();
     advertising_init();
     conn_params_init();
-
     // Start execution.
     NRF_LOG_INFO("ESTC GATT server example started");
     application_timers_start();
-
     advertising_start();
 
+    pwm.update_led2();
+
     // Enter main loop.
-    for (;;)
+    while (true) 
     {
         idle_state_handle();
     }
 }
+
+void operator delete(void*, unsigned int)
+{}
 
 
 /**
