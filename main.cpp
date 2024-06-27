@@ -25,7 +25,7 @@
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
 
-#include "app_usbd.h"
+#include "app_scheduler.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -55,6 +55,9 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+#define SCHED_MAX_EVENT_DATA_SIZE       sizeof(ble_evt_t)                       /**< Maximum size of scheduler events. */
+#define SCHED_QUEUE_SIZE                10                                      /**< Maximum number of events in the scheduler queue. */
+
 #define DEVICE_ID                       7207
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
@@ -80,11 +83,11 @@ nrf::pwm<0> pwm(DEVICE_ID, pwm_handler);
 static void advertising_start(void);
 
 
-void update_color(const ble_evt_t* ble_evt)
+void update_color(void* p_ble_evt, uint16_t evt_size)
 {
     NRF_LOG_INFO("Value updated");
 
-    const ble_gatts_evt_write_t* evt_write = &ble_evt->evt.gatts_evt.params.write;
+    const ble_gatts_evt_write_t* evt_write = &((ble_evt_t*)p_ble_evt)->evt.gatts_evt.params.write;
 
     if (evt_write->handle == m_estc_service.characteristic_write_handle.value_handle)
     {
@@ -373,7 +376,9 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             break;
 
         case BLE_GATTS_EVT_WRITE:
-            update_color(p_ble_evt);
+            NRF_LOG_INFO("Write event");
+            err_code = app_sched_event_put(p_ble_evt, sizeof(ble_evt_t), update_color);
+            APP_ERROR_CHECK(err_code);
             break;
 
         default:
@@ -503,12 +508,21 @@ static void power_management_init(void)
 }
 
 
+/**@brief Function for initializing scheduler.
+ */
+static void scheduler_init(void)
+{
+    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
+}
+
+
 /**@brief Function for handling the idle state (main loop).
  *
  * @details If there is no pending log operation, then sleep until next the next event occurs.
  */
 static void idle_state_handle(void)
 {
+    app_sched_execute();
     if (NRF_LOG_PROCESS() == false)
     {
         nrf_pwr_mgmt_run();
@@ -535,14 +549,16 @@ int main(void)
 
     timers_init();
     buttons_leds_init();
-
+    scheduler_init();
     power_management_init();
+
     ble_stack_init();
     gap_params_init();
     gatt_init();
     services_init();
     advertising_init();
     conn_params_init();
+
     // Start execution.
     NRF_LOG_INFO("ESTC GATT server example started");
     application_timers_start();
