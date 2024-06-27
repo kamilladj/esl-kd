@@ -121,7 +121,10 @@ namespace nrf
         void wait_for_flash_ready()
         {
             while (nrf_fstorage_is_busy(&m_fstorage))
-                nrf_pwr_mgmt_run();
+            {
+                NRF_LOG_INFO("Busy");
+                sd_app_evt_wait(); 
+            }
         }
 
     public:
