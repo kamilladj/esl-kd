@@ -103,7 +103,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/common/ble_conn_params.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
-  $(PROJ_DIR)/estc_service.cpp \
+  $(PROJ_DIR)/nrf/ble/estc_service.cpp \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -114,6 +114,7 @@ INC_FOLDERS += \
   $(PROJ_DIR)/nrf/pwm \
   $(PROJ_DIR)/nrf/timers \
   $(PROJ_DIR)/nrf/flash \
+  $(PROJ_DIR)/nrf/ble \
   $(PROJ_DIR)/utils \
   $(PROJ_DIR)/error \
   $(PROJ_DIR)/simpletest \
