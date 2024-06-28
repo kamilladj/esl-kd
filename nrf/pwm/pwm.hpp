@@ -147,13 +147,8 @@ namespace nrf
 
         void update_led2()
         {
-            //if (!load_color())
-                //save_color();   
-
-            //NRF_LOG_INFO("Led update");
-
             rgb color(m_hsv);
-            //m_seq_values.channel_0 = 0;
+
             m_seq_values.channel_1 = color.red;
             m_seq_values.channel_2 = color.green;
             m_seq_values.channel_3 = color.blue;
