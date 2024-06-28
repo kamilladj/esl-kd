@@ -266,13 +266,6 @@ static void conn_params_init(void)
 }
 
 
-/**@brief Function for starting timers.
- */
-static void application_timers_start(void)
-{
-}
-
-
 /**@brief Function for putting the chip into sleep mode.
  *
  * @note This function will not return.
@@ -540,11 +533,8 @@ static void advertising_start(void)
 }
 
 
-/**@brief Function for application main entry.
- */
-int main(void)
+void init()
 {
-    // Initialize.
     log_init();
 
     timers_init();
@@ -558,10 +548,17 @@ int main(void)
     services_init();
     advertising_init();
     conn_params_init();
+}
+
+
+/**@brief Function for application main entry.
+ */
+int main(void)
+{
+    // Initialize.
+    init();
 
     // Start execution.
-    NRF_LOG_INFO("ESTC GATT server example started");
-    application_timers_start();
     advertising_start();
 
     pwm.update_led2();
