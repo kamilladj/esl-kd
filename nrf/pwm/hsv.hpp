@@ -7,6 +7,9 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
+#include "ble_gatts.h"
+#include "app_util.h"
+
 namespace nrf
 {
     enum directions { up, down };
@@ -25,6 +28,12 @@ namespace nrf
             : m_hue{h}
             , m_sat{s}
             , m_val{v}
+        {}
+
+        hsv(const ble_gatts_evt_write_t& write)
+            : m_hue{ uint16_big_decode(&write.data[0]) }
+            , m_sat{ uint16_big_decode(&write.data[2]) }
+            , m_val{ uint16_big_decode(&write.data[4]) }
         {}
 
     public:
@@ -93,6 +102,18 @@ namespace nrf
         uint16_t get_val() const
         {
             return m_val;
+        }
+
+    public:
+
+        void fill_data(uint8_t* data)
+        {
+            data[0] = (m_hue >> 8) & 0xFF;
+            data[1] = m_hue & 0xFF;
+            data[2] = (m_sat >> 8) & 0xFF;
+            data[3] = m_sat & 0xFF;
+            data[4] = (m_val >> 8) & 0xFF;
+            data[5] = m_val & 0xFF;
         }
 
     private:

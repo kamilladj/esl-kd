@@ -24,8 +24,7 @@
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
-
-#include "app_scheduler.h"
+#include "mem_manager.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -35,6 +34,7 @@
 #include "estc_service.hpp"
 
 #include "pwm.hpp"
+#include "scheduler.hpp"
 
 #define DEVICE_NAME                     "KamillaDjuldibaeva"                    /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -54,9 +54,6 @@
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                       /**< Number of attempts before giving up the connection parameter negotiation. */
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
-
-#define SCHED_MAX_EVENT_DATA_SIZE       sizeof(ble_evt_t)                       /**< Maximum size of scheduler events. */
-#define SCHED_QUEUE_SIZE                10                                      /**< Maximum number of events in the scheduler queue. */
 
 #define DEVICE_ID                       7207
 
@@ -79,31 +76,29 @@ void pwm_handler() {}
 
 nrf::pwm<0> pwm(DEVICE_ID, pwm_handler);
 
+nrf::scheduler<sizeof(utils::static_function<void()>*)> sched;
+
 
 static void advertising_start(void);
 
 
-void update_color(void* p_ble_evt, uint16_t evt_size)
+void update_color(uint16_t handle, nrf::hsv color)
 {
-    NRF_LOG_INFO("Value updated");
+    NRF_LOG_INFO("Color update");
 
-    const ble_gatts_evt_write_t* evt_write = &((ble_evt_t*)p_ble_evt)->evt.gatts_evt.params.write;
-
-    if (evt_write->handle == m_estc_service.characteristic_write_handle.value_handle)
+    if (handle == m_estc_service.characteristic_write_handle.value_handle)
     {
-        uint16_t h = evt_write->data[1];
-        uint16_t s = evt_write->data[3];
-        uint16_t v = evt_write->data[5];
-
-        nrf::hsv color = nrf::hsv(h, s, v);
         pwm.set_hsv(color);
         pwm.update_led2();
+
+        uint8_t data[sizeof(nrf::hsv)]; 
+        color.fill_data(data);
 
         estc_ble_send_characteristic_value(m_estc_service.connection_handle,
                                            m_estc_service.characteristic_notify_handle.value_handle,
                                            BLE_GATT_HVX_NOTIFICATION,
                                            sizeof(nrf::hsv),
-                                           evt_write->data);
+                                           data);
 
         pwm.save_color();
     }
@@ -369,10 +364,16 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             break;
 
         case BLE_GATTS_EVT_WRITE:
+        {
             NRF_LOG_INFO("Write event");
-            err_code = app_sched_event_put(p_ble_evt, sizeof(ble_evt_t), update_color);
+
+            uint16_t handle = p_ble_evt->evt.gatts_evt.params.write.handle;
+            nrf::hsv color(p_ble_evt->evt.gatts_evt.params.write);
+
+            err_code = sched.put_event([handle, color]() { update_color(handle, color); });
             APP_ERROR_CHECK(err_code);
             break;
+        }
 
         default:
             // No implementation needed.
@@ -501,21 +502,13 @@ static void power_management_init(void)
 }
 
 
-/**@brief Function for initializing scheduler.
- */
-static void scheduler_init(void)
-{
-    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
-}
-
-
 /**@brief Function for handling the idle state (main loop).
  *
  * @details If there is no pending log operation, then sleep until next the next event occurs.
  */
 static void idle_state_handle(void)
 {
-    app_sched_execute();
+    sched.execute();
     if (NRF_LOG_PROCESS() == false)
     {
         nrf_pwr_mgmt_run();
@@ -539,8 +532,8 @@ void init()
 
     timers_init();
     buttons_leds_init();
-    scheduler_init();
     power_management_init();
+    nrf_mem_init();
 
     ble_stack_init();
     gap_params_init();
