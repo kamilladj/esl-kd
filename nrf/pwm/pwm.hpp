@@ -5,6 +5,7 @@
 #include "nrfx_pwm.h"
 #include "static_vector.hpp"
 
+#include "atomic_32.hpp"
 #include "lock_guard.hpp"
 #include "mutex.hpp"
 
@@ -35,8 +36,8 @@ namespace nrf
             , m_hsv{ device_id }
             , m_storage{}
         {
-            if (!m_storage.load(m_hsv))
-                m_storage.save(m_hsv);           
+            if (!load_color())
+                save_color();           
 
             error::error_status err = init();
 
@@ -63,7 +64,7 @@ namespace nrf
 
         void playback()
         {
-            nrf_pwm_sequence_t seq;
+            nrf_pwm_sequence_t seq = { 0 };
             seq.values.p_individual = &m_seq_values;
             seq.length = NRF_PWM_VALUES_LENGTH(m_seq_values);
 
@@ -86,6 +87,31 @@ namespace nrf
                 m_blink_mode = value_mode;
             else
                 m_blink_mode = default_mode;
+        }
+
+    public:
+
+        void set_hsv(const hsv& obj)
+        {
+            m_hsv = obj;
+
+            NRF_LOG_INFO("HSV values : H = %d, S = %d, V = %d", m_hsv.get_hue(), m_hsv.get_sat(), m_hsv.get_val());
+        }
+
+    public:
+
+        void save_color()
+        {
+            NRF_LOG_INFO("Saving color to flash");
+
+            m_storage.save(m_hsv);
+        }
+
+        bool load_color()
+        {
+            NRF_LOG_INFO("Loading color from flash");
+
+            return m_storage.load(m_hsv);
         }
 
     public:
@@ -122,6 +148,7 @@ namespace nrf
         void update_led2()
         {
             rgb color(m_hsv);
+
             m_seq_values.channel_1 = color.red;
             m_seq_values.channel_2 = color.green;
             m_seq_values.channel_3 = color.blue;
@@ -166,7 +193,7 @@ namespace nrf
             {
                 m_step_value = 0;
                 NRF_LOG_INFO("HSV values : H = %d, S = %d, V = %d", m_hsv.get_hue(), m_hsv.get_sat(), m_hsv.get_val());
-                m_storage.save(m_hsv);
+                save_color();
             }
         }
 
